@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <title>Exfiltrate</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+  </head>
+  <body>
+    <div class="scanlines"></div>
+    <div class="scanline"></div>
+    <pre><output>
+      <div class="lobby" id="lobby"><span id="joinlines"></span><span id="namebox"></span><span id="connectingBox"></span>
+        <input id="inputBox" name="inputBox" type="text" autofocus>
+      </div>
+
+      <center> 
+        <div id="board"></div>
+      </center>
+
+    </output></pre>
+
+
+    <script src="/static/globals.js"></script>
+    <script src="/static/lobby.js"></script>
+    <script src="/static/drawing.js"></script>
+    <script src="/static/board.js"></script>
+  </body>
+</html>
+
