@@ -5,19 +5,26 @@
     <link rel="stylesheet" type="text/css" href="/static/style.css">
   </head>
   <body>
-    <div class="scanlines"></div>
-    <div class="scanline"></div>
-    <pre><output>
-      <div class="lobby" id="lobby"><span id="joinlines"></span><span id="namebox"></span><span id="connectingBox"></span>
-        <input id="inputBox" name="inputBox" type="text" autofocus>
+    <input id="inputField" type="text" autofocus>
+    <span class="scanlines"></span>
+    <span class="scanline"></span>
+    
+      <div class="lobby" id="lobby">
+        <pre><br><span id="joinlines"></span><span id="nameInput"></span></pre>
       </div>
 
-      <center> 
-        <div id="board"></div>
+      <center>
+        <div id="board">
+          <pre><span id="topology"></span></pre>
+          <br><br>
+          --------------------------------------------------------------
+          <br>
+          <span id="prompt"></span>
+          <span id="choiceBox">[Y/N]</span>
+          <span id="typingBox"></span>
+          <span id="prompt_caret"> █</span>
+        </div>
       </center>
-
-    </output></pre>
-
 
     <script src="/static/globals.js"></script>
     <script src="/static/lobby.js"></script>

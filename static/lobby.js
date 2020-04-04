@@ -1,23 +1,14 @@
 
-var nameBox = document.getElementById('namebox');
-var connectingBox = document.getElementById('connectingBox');
 var linesBox = document.getElementById("joinlines");
-
-
-nameBox.style.visibility = 'hidden';
+var nameInput = document.getElementById("nameInput");
 
 
 animate_typing(
 	linesBox, 
 	"> Connecting to www.dark.net/exfil.EXE\n> pr0xy: blitting registers - <b><font color=\"#22ff22\">[SUCCESS]</font></b>\n> Rasterising backdoor.jpg ... <b><font color=\"22ff22\">[SUCCESS]</font></b>\n> Spoofing creds ... <b><font color=\"#ee2211\">[FAILED]</font></b> - Users Detected!\n> Initialising mode -1 (MANUAL)\n> Enter your name: ",
 	typing_delay,
-	enterName
+	() => createInputBox(nameInput, joinWithName)
 );
-
-
-var caret_interval = setInterval(function(){
-	drawNameBox();
-}, 700);
 
 
 var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-!?#[]~:.$";
@@ -26,76 +17,66 @@ function filterInput(str) {
 }
 
 
-function drawNameBox(e) {
-  inputBox.value = filterInput(inputBox.value);
-  var fill = inputBox.value + ' ';
-  if (offBeat || e != undefined) {
-    var i = inputBox.selectionStart;
-    fill = fill.slice(0, i) + "█" + fill.slice(i+1);
-  }
-  nameBox.innerHTML = fill;
-};
-
-
-function enterName() {
-	// Activate the box //
-	namebox.style.visibility = 'visible';
-	inputBox.focus();
-	inputBox.addEventListener('input', drawNameBox, false);
-
-	// Animate the box //
-	document.body.onkeyup = function() {drawNameBox(true)};
-	document.body.onkeydown = function nameBoxKeyDown(e){
-		inputBox.value = filterInput(inputBox.value);
-		var name = inputBox.value;
-		inputBox.focus();
-
-		// Set up deactivation of the box //
-		if (e.keyCode == 13 && name.length > 0) {
-			deactivateNameBox();
-			linesBox.innerHTML += name + '\n';
+function joinWithName(name) {
+	linesBox.innerHTML += name + '\n';
+	animate_typing(linesBox, "> Connecting...", typing_delay, function () {
+		socket.emit('join game', name);
+		socket.once('reject name', function (reason) {
 			animate_typing(
 				linesBox, 
-				"> Connecting...", 
+				"\n> " + red("<b>Rejected</b>: ") + reason + 
+				'\n> Enter your <b>real</b> name: ', 
 				typing_delay, 
-				function(){
-					nameBox.style.visibility = 'visible';
-					tryName(name);
-				}
+				() => createInputBox(nameInput, joinWithName)
 			);
-		}
-	};
-
-}
-
-function deactivateNameBox() {
-	nameBox.style.visibility = 'hidden';
-	inputBox.value = "";
-	inputBox.blur();
-	document.body.onkeydown = null;
-	document.body.onkeyup = null;
-	drawNameBox();
-}
-
-
-function tryName(name) {
-	socket.emit('join game', name);
-	socket.once('reject name', function (reason) {
-		deactivateNameBox();
-		animate_typing(
-			linesBox, 
-			"\n> " + red("<b>Rejected</b>: ") + reason + 
-			'\n> Enter your <b>real</b> name: ', 
-			typing_delay, 
-			enterName
-		);
+		});
 	});
 }
 
 
-function closeLobby() {
-	clearInterval(caret_interval);
-	deactivateNameBox();
-	socket.removeAllListeners('reject name');
-	lobby.style.visibility = 'hidden';
+function createInputBox(location, action) {
+	// Create the box and attach it to the global input field //
+	var inputBox = document.createElement('span');
+	location.appendChild(inputBox);
+	inputField.value = "";
+	inputField.focus();
+	inputField.addEventListener('input', drawInputBox, false);
+
+	// Animate the box //
+	var caret = false;
+	function drawInputBox(e) {
+		inputField.value = filterInput(inputField.value);
+	  	var fill = inputField.value + ' ';
+	  	if (caret || e != undefined) {
+		    var i = inputField.selectionStart;
+		    fill = fill.slice(0, i) + "█" + fill.slice(i+1);
+	  	}
+	  	inputBox.innerHTML = fill;
+	};
+	var interval = setInterval(function () {caret=!caret; drawInputBox();}, 700);
+	document.body.onkeyup = () => drawInputBox(true);
+	document.body.onkeydown = function(e){
+		inputField.focus();
+		inputField.value = filterInput(inputField.value);
+
+		// Remove the box and apply the callback action //
+		if (e.keyCode == 13 && inputField.value.length > 0) {
+			location.removeChild(inputBox);
+			var value = inputField.value;
+			inputField.value = "";
+			inputField.blur();
+			inputField.removeEventListener('input', drawInputBox, false);
+			clearInterval(interval);
+			document.body.onkeydown = null;
+			document.body.onkeyup = null;
+			action(value);
+		}
+	};
 }
+
+
+function closeLobby() {
+	socket.removeAllListeners('reject name');
+	lobby.style.display = 'none';
+}
+

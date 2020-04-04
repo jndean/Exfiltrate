@@ -1,4 +1,5 @@
 
+var prompt = document.getElementById("prompt");
 board.style.visibility = 'hidden';
 
 
@@ -26,5 +27,44 @@ function updateState(new_state) {
   state = new_state;
   console.log("Current state", state);
   drawBoard();
+  updatePrompt();
 }
 
+
+
+
+
+
+
+
+// ---------------- Prompt ------------------ //
+
+var animating_prompt = false;
+var target_prompt = null;
+
+function setPromptText(text) {
+	target_prompt = text;
+	if (animating_prompt || prompt.innerHTML == text) {
+		return;
+	}
+	animating_prompt = true;
+	animate_typing(
+		prompt, 
+		text,
+		15,
+		function() {
+			prompt.innerHTML = target_prompt;
+			animating_prompt = false;
+		}
+	);
+}
+
+function updatePrompt() {
+	if (state.phase == 'choosing') {
+		setPromptText('Stay connected?');
+	} else if (state.phase == 'test') {
+		setPromptText('The current phase is TEST');
+	} else {
+		setPromptText('');
+	}
+}

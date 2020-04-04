@@ -1,7 +1,7 @@
 var socket = io();
 
 // Params! //
-var typing_delay = 1;
+var typing_delay = 2;
 
 
 // State! //
@@ -15,7 +15,7 @@ var beatInterval = setInterval(
 
 
 // DOM! //
-var inputBox = document.getElementById('inputBox');
+var inputField = document.getElementById('inputField');
 var lobby = document.getElementById("lobby");
 var board = document.getElementById("board");
 

@@ -1,6 +1,7 @@
 
   
 var board = document.getElementById("board");
+var topology = document.getElementById("topology");
 
 
 function drawBoard() {
@@ -78,7 +79,7 @@ function drawBoard() {
 
   rows = rows.concat(drawPlayers());
 
-  board.innerHTML = rows.join('\n');	
+  topology.innerHTML = rows.join('\n');	
 }
 
 

@@ -62,6 +62,9 @@ io.on('connection', function(socket) {
     if (name in name_to_pid && players[name_to_pid[name]].online) {
       socket.emit('reject name', 'That user is already connected');
       return;
+    } else if (phase != 'lobby' && !(name in name_to_pid)) {
+      socket.emit('reject name', 'The hacking has already started');
+      return;
     }
     socket_to_name[socket.id] = name;
     if (!(name in name_to_pid)){
@@ -94,7 +97,7 @@ io.on('connection', function(socket) {
 
 
   socket.on('start', function(action) {
-    if (action != "now") return;
+    if (action != "now" || phase != "lobby") return;
     var num_players = Object.keys(players).length;
     if (num_players < 0  || num_players > 6) {
       console.log('Incorrect number of players:', num_players);
@@ -120,12 +123,8 @@ function broadcastState() {
 // ------------------ Game logic ------------------ //
 
 function startGame() {
-  for (var name in players) {
-    if (!players[name].online) {
-      console.log("Can't start while \"" + name + "\" is offline");
-      return;
-    }
-    players[name].points = 0;
+  for (var i=0; i<players.length; i++) {
+    players[i].points = 0;
   }
   bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
   firewall = ['on', 'on', 'on'];

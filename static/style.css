@@ -1,21 +1,21 @@
 body {
   background-color: black;
   background-image: radial-gradient(
-    rgba(0, 75, 45, 0.75), black 120%
+    rgba(0, 75, 35, 0.75), black 120%
   );
   height: 100vh;
   margin: 0;
   overflow: hidden;
   padding: 0;
   color: #44ff44;
-  font: 1.3rem Inconsolata, monospace;
+  font: 17px Inconsolata, monospace;
   text-shadow: 0 0 5px #222222;
 }
 pre {
   margin: 0;
 }
 
-#inputBox {
+#inputField {
     color: rgba(0,0,0,0,);
     font: 1rem Inconsolata, monospace;
     background: transparent;
@@ -24,9 +24,19 @@ pre {
   
 }
 
-.lobby {
+#lobby {
   padding: 0 0 0 3rem;
 }
+
+#board {
+  margin: 15px 0 0 0;
+  position: absolute;
+  top: 0%;
+  left: 50%;
+  -ms-transform: translate(-50%, 0%);
+  transform: translate(-50%, 0%);
+}
+
 
 .scanlines {
   position:absolute;
