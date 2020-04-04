@@ -45,6 +45,7 @@ var secrets = []; // Types: 'D', 'G', 'S', '!D', '!G', '!S'
 var firewall = ["off", "change", "on"]; // Types: "on", "off", "change"
 var bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
 var agents = [];
+var choices = [];
 
 newAgent();
 newAgent();
@@ -75,6 +76,7 @@ io.on('connection', function(socket) {
         money: 0,
         online: true,
         state: '',
+        message: null,
         secrets: [],
       };
     } else {
@@ -106,6 +108,11 @@ io.on('connection', function(socket) {
     startGame();
   });
 
+  socket.on(
+    'chooseAction',
+    (choice) => recieveActionChoice(pid, choice)
+  );
+
 });
 
 function broadcastState() {
@@ -120,7 +127,7 @@ function broadcastState() {
 
 
 
-// ------------------ Game logic ------------------ //
+// ------------------ Init game, round ------------------ //
 
 function startGame() {
   for (var i=0; i<players.length; i++) {
@@ -141,16 +148,46 @@ function startRound(round_num) {
   broadcastState();
   setTimeout(function() {
     for (var i=0; i<agents.length; i++) agents[i].state = "";
-    startChoosing();
+    startChoosingAction();
   }, 2000);
 }
 
+// ----------------- Choosing actions ---------------- //
 
-function startChoosing() {
-    phase = "choosing";
-    for (var i=0; i<players.length; i++) players[i].state = 'choosing';
+function startChoosingAction() {
+    phase = "choosingAction";
+    choices = Array(players.length).fill(null);
+    for (var i=0; i<players.length; i++) players[i].state = 'choosingAction';
     broadcastState();
 }
+
+function recieveActionChoice(pid, choice) {
+    if (phase != 'choosingAction') return;
+    choices[pid] = choice == 'y';
+    players[pid].state = 'chosenAction';
+    broadcastState();
+    if (choices.every(x => x != null)) {
+      showActions();
+    }
+}
+
+/*
+function allChosenAction() {
+  for (var i=0; i<players.length; ++i) {
+    if (players[i].state)
+  }
+}
+*/
+
+function showActions() {
+    phase = 'showingAction';
+    for (var i=0; i<players.length; i++) {
+        if (!choices[i])
+    }
+    broadcastState();
+}
+
+// -------------------------------------------------- //
 
 
 function newAgent() {

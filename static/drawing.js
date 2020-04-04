@@ -89,8 +89,8 @@ function drawPlayers() {
 	var rows = [[], [], [], []];
 	for (var i = 0; i < state.players.length; i++) {
 		var player = state.players[i];
-		var qmark = (player.state == 'choosing' && offBeat)
-		            || player.state == 'chosen';
+		var qmark = (player.state == 'choosingAction' && offBeat)
+		            || player.state == 'chosenAction';
 		if (qmark) {
 			pipes.push('?');
 			rows[0].push("+=======?=======+");

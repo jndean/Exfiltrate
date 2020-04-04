@@ -37,6 +37,12 @@ pre {
   transform: translate(-50%, 0%);
 }
 
+#cmdline {
+  width: 600px;
+  display: inline-block;
+  text-align: left;
+}
+
 
 .scanlines {
   position:absolute;
