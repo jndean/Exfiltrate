@@ -1,12 +1,15 @@
 
 board.style.visibility = 'hidden';
 
+var myPid = null;
 
-// Game entry point is when server accepts the player's name //
-socket.on('accept name', function() {
+
+// Main game entry point is when server accepts the player's name //
+socket.on('accept name', function(pid) {
+	myPid = pid;
 	closeLobby();
-	openBoard();
 });
+socket.on('open board', openBoard);
 
 
 function openBoard() {
@@ -27,7 +30,25 @@ function updateState(new_state) {
   	state = new_state;
   	console.log("Current state", state);
   	drawBoard();
-  	if (phaseChange) updatePrompt();
+
+  	if (!phaseChange) return;
+
+  	choiceOutput.innerHTML = "";
+	switch (state.phase) {
+		case 'choosingAction':
+			updatePrompt_choosingAction()
+			break;
+		case 'disconnect':
+			updatePrompt_disconnect()
+			break;
+		case 'test':
+			setPromptText('The current phase is TEST', null);
+			break;
+		default:
+			setPromptText('');
+			removeInputBox();
+
+	}
 }
 
 
@@ -60,21 +81,34 @@ function setPromptText(text, callback) {
 	});
 }
 
-function updatePrompt() {
-	choiceOutput.innerHTML = "";
-	if (state.phase == 'choosingAction') {
-		setPromptText('> Stay connected?', function () {
-			choiceOutput.innerHTML = " [y/n] ";
-			maxInputLength = 1;
-			placeInputBox(
-				choiceInput, 
-				(t) => ['y', 'n'].includes(t.toLowerCase()),
-				submitChooseAction
-			)
+
+function updatePrompt_choosingAction() {
+	setPromptText('> Stay connected?', function () {
+		choiceOutput.innerHTML = " [y/n] ";
+		maxInputLength = 1;
+		placeInputBox(
+			choiceInput, 
+			(t) => ['y', 'n'].includes(t.toLowerCase()),
+			submitChooseAction
+		);
+	});
+}
+
+function updatePrompt_disconnect() {
+	var disconnects = [];
+	var otherNames = [];
+	for (var i=0; i<state.players.length; ++i) {
+		var p = state.players[i];
+		if (p.state == 'disconnecting') {
+			disconnects.push();
+			if (i != myPid) otherNames.push(p.name);
+		}
+	}
+	if (state.players[myPid].state == 'disconnecting') {
+		setPromptText(meDisconnecting(otherNames), function () {
+
 		});
-	} else if (state.phase == 'test') {
-		setPromptText('The current phase is TEST', null);
 	} else {
-		setPromptText('');	
+		setPromptText(othersDisconnecting(otherNames), null);
 	}
 }

@@ -91,7 +91,15 @@ function drawPlayers() {
 		var player = state.players[i];
 		var qmark = (player.state == 'choosingAction' && offBeat)
 		            || player.state == 'chosenAction';
-		if (qmark) {
+		if (player.state == 'disconnecting') {
+			if (offBeat) {
+				pipes.push(red('|'));
+				rows[0].push("+=======" + red("X") + "=======+");
+			} else {
+				pipes.push(' ');
+				rows[0].push("+===============+");
+			}
+		} else if (qmark) {
 			pipes.push('?');
 			rows[0].push("+=======?=======+");
 		} else {

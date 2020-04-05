@@ -114,3 +114,7 @@ function filterAlphabet(str) {
             .join('')
             .slice(0, maxInputLength);
 }
+
+function rng(items) {
+	return items[Math.floor(Math.random() * items.length)];
+}

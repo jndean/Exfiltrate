@@ -5,7 +5,7 @@ var nameInput = document.getElementById("nameInput");
 
 animate_typing(
 	linesBox, 
-	"> Connecting to www.dark.net/exfil.EXE\n> pr0xy: blitting registers - <b><font color=\"#22ff22\">[SUCCESS]</font></b>\n> Rasterising backdoor.jpg ... <b><font color=\"22ff22\">[SUCCESS]</font></b>\n> Spoofing creds ... <b><font color=\"#ee2211\">[FAILED]</font></b> - Users Detected!\n> Initialising mode -1 (MANUAL)\n> Enter your name: ",
+	lobby_message,
 	typing_delay,
 	() => placeInputBox(nameInput, validNameCheck, joinWithName)
 );

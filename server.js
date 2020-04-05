@@ -46,6 +46,8 @@ var firewall = ["off", "change", "on"]; // Types: "on", "off", "change"
 var bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
 var agents = [];
 var choices = [];
+var currentHacker = 0;
+var commonText = '';
 
 newAgent();
 newAgent();
@@ -74,17 +76,18 @@ io.on('connection', function(socket) {
       players[pid] = {
         name: name,
         money: 0,
-        online: true,
+        connected: true,
         state: '',
         message: null,
         secrets: [],
       };
     } else {
       pid = name_to_pid[name];
-      players[pid].online = true;
+      players[pid].connected = true;
     }
+    socket.emit('accept name', pid);
     broadcastState();
-    socket.emit('accept name');
+    socket.emit('open board');
   });
 
 
@@ -93,7 +96,7 @@ io.on('connection', function(socket) {
     var name = socket_to_name[socket.id];
     console.log('Disconnected:', name);
     delete socket_to_name[socket.id];
-    players[pid].online = false;
+    players[pid].connected = false;
     broadcastState();
   });
 
@@ -121,10 +124,22 @@ function broadcastState() {
     phase: phase,
     secrets: secrets,
     firewall: firewall,
-    agents: agents
+    agents: agents, 
+    commonText: commonText
   });
 }
 
+
+function setStateIfOnline(player, state) {
+  if (player.state != 'offline') {
+    player.state = state;
+  }
+}
+function setStateOfAllOnlinePlayers(state) {
+  for (var i=0; i<players.length; ++i) {
+    setStateIfOnline(players[i], state);
+  }
+}
 
 
 // ------------------ Init game, round ------------------ //
@@ -157,7 +172,7 @@ function startRound(round_num) {
 function startChoosingAction() {
     phase = "choosingAction";
     choices = Array(players.length).fill(null);
-    for (var i=0; i<players.length; i++) players[i].state = 'choosingAction';
+    setStateOfAllOnlinePlayers('choosingAction');
     broadcastState();
 }
 
@@ -166,25 +181,51 @@ function recieveActionChoice(pid, choice) {
     choices[pid] = choice == 'y';
     players[pid].state = 'chosenAction';
     broadcastState();
-    if (choices.every(x => x != null)) {
-      showActions();
+    if (players.every(p => ['offline', 'chosenAction'].includes(p.state))) {
+      startDisconnect();
     }
 }
 
-/*
-function allChosenAction() {
-  for (var i=0; i<players.length; ++i) {
-    if (players[i].state)
-  }
-}
-*/
 
-function showActions() {
-    phase = 'showingAction';
+// ---------------------- Disconnecting (ingame) ---------------------- //
+
+function startDisconnect() {
+    phase = 'disconnect';
+
+    // Set display states //
+    var disconnecters = [];
     for (var i=0; i<players.length; i++) {
-        if (!choices[i])
+        if (choices[i] === true) {
+          players[i].state = '';
+        } else if (choices[i] === false) {
+          players[i].state = 'disconnecting';
+          disconnecters.push(i);
+        }
     }
+
+    if (disconnecters.length == 0) {
+      // Move onto hacking //
+      // With delay to show everybody is connected? //
+    } else {
+      // Wait for secret negotiation messages //
+      choices = Array(players.length).fill(null);
+    }
+
+    commonText = randomInsult();
     broadcastState();
+    // if (player.every(p => p.state == 'offline')) {}
+}
+
+function negotiateSecrets(pids) {
+
+}
+
+
+// ---------------------- Hacking ---------------------- //
+
+function startHacking() {
+  phase = 'prepareHacking';
+
 }
 
 // -------------------------------------------------- //
@@ -216,4 +257,14 @@ function shuffle(a) {
         [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
+}
+
+function rng(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+var insultAdjective = ['two-bit', 'depricated', 'packet-dropping', 'hackless', 'gui-using', 'bit-twiddling', 'off-by-one'];
+var insultNoun = ['script kiddie', 'socket hopper', 'anti-pattern', 'no-op', 'code monkey', 'core dump'];
+function randomInsult() {
+  return rng(insultAdjective) + ' ' + rng(insultNoun);
 }
