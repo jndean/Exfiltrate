@@ -196,7 +196,7 @@ function startDisconnect() {
     var disconnecters = [];
     for (var i=0; i<players.length; i++) {
         if (choices[i] === true) {
-          players[i].state = '';
+          players[i].state = 'remain';
         } else if (choices[i] === false) {
           players[i].state = 'disconnecting';
           disconnecters.push(i);
@@ -264,7 +264,7 @@ function rng(items) {
 }
 
 var insultAdjective = ['two-bit', 'depricated', 'packet-dropping', 'hackless', 'gui-using', 'bit-twiddling', 'off-by-one'];
-var insultNoun = ['script kiddie', 'socket hopper', 'anti-pattern', 'no-op', 'code monkey', 'core dump'];
+var insultNoun = ['script kiddie', 'socket hopper', 'anti-pattern', 'no-op', 'code monkey', 'core dump', 'null pointer'];
 function randomInsult() {
   return rng(insultAdjective) + ' ' + rng(insultNoun);
 }

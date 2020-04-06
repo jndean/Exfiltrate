@@ -39,6 +39,7 @@ function updateState(new_state) {
 			updatePrompt_choosingAction()
 			break;
 		case 'disconnect':
+			removeInputBox();
 			updatePrompt_disconnect()
 			break;
 		case 'test':
@@ -47,40 +48,37 @@ function updateState(new_state) {
 		default:
 			setPromptText('');
 			removeInputBox();
-
 	}
 }
 
 
-function submitChooseAction(choice) {
-	choice = choice.toLowerCase();
-	socket.emit('chooseAction', choice);
-	choiceOutput.innerHTML = " [" + choice + "] ";
-}
 
-
-
-// ---------------- Prompt ------------------ //
+// ---------------- Prompt and log ------------------ //
 
 var choiceInput = document.getElementById("choiceInput");
 var choiceOutput = document.getElementById("choiceOutput");
 var prompt = document.getElementById("prompt");
 var animating_prompt = false;
 var target_prompt = null;
+var promptCallback = null;
 
 function setPromptText(text, callback) {
-	target_prompt = text;
+	promptTarget = text;
+	promptCallback = callback;
 	if (animating_prompt || prompt.innerHTML == text) {
 		return;
 	}
-	animating_prompt = true;
+	animatingPrompt = true;
+	prompt.innerHTML = "";
 	animate_typing(prompt, text, 10, function() {
-		prompt.innerHTML = target_prompt;
-		animating_prompt = false;
-		if (callback != null) callback();
+		prompt.innerHTML = promptTarget;
+		animatingPrompt = false;
+		if (promptCallback != null) callback();
 	});
 }
 
+
+// ----------------------------------------------- //
 
 function updatePrompt_choosingAction() {
 	setPromptText('> Stay connected?', function () {
@@ -94,8 +92,17 @@ function updatePrompt_choosingAction() {
 	});
 }
 
+function submitChooseAction(choice) {
+	choice = choice.toLowerCase();
+	socket.emit('chooseAction', choice);
+	choiceOutput.innerHTML = " [" + choice + "] ";
+}
+
+// ----------------------------------------------- //
+
 function updatePrompt_disconnect() {
 	var disconnects = [];
+	var numRemain = 0;
 	var otherNames = [];
 	for (var i=0; i<state.players.length; ++i) {
 		var p = state.players[i];
@@ -103,12 +110,41 @@ function updatePrompt_disconnect() {
 			disconnects.push();
 			if (i != myPid) otherNames.push(p.name);
 		}
+		if (p.state == 'remain') numRemain += 1;
 	}
 	if (state.players[myPid].state == 'disconnecting') {
-		setPromptText(meDisconnecting(otherNames), function () {
-
+		var numSecrets = 1 + (numRemain == 0);
+		setPromptText(meDisconnecting(otherNames, numSecrets), function () {
+			maxInputLength = 4 * numSecrets;
+			placeInputBox(
+				choiceInput,
+				(t) => parseSecrets(t) != null,
+				submitChooseSecrets
+			);
 		});
 	} else {
 		setPromptText(othersDisconnecting(otherNames), null);
 	}
 }
+
+function parseSecrets(text) {
+	var items = text.split(' ');
+	var secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0, "!2": 0};
+	for (var i=0; i<items.length; ++i) {
+		var item = items[i];
+		if (['k', 'K'].includes(item.slice(-1))) {
+			item = item.slice(0, -1);
+		}
+		if (!(item in secrets)) return null;
+		secrets[item] += 1;
+	}
+	return secrets;
+}
+
+function submitChooseSecrets(text) {
+	var secrets = parseSecrets(text);
+	if (secrets == null) return;
+	socket.emit('chooseSecrets', secrets);
+}
+
+// ----------------------------------------------------- //

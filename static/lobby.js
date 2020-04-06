@@ -5,7 +5,7 @@ var nameInput = document.getElementById("nameInput");
 
 animate_typing(
 	linesBox, 
-	lobby_message,
+	"", //lobby_message,
 	typing_delay,
 	() => placeInputBox(nameInput, validNameCheck, joinWithName)
 );
