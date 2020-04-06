@@ -34,20 +34,19 @@ function updateState(new_state) {
   	if (!phaseChange) return;
 
   	choiceOutput.innerHTML = "";
+	removeInputBox();
 	switch (state.phase) {
 		case 'choosingAction':
-			updatePrompt_choosingAction()
+			startPhase_choosingAction();
 			break;
 		case 'disconnect':
-			removeInputBox();
-			updatePrompt_disconnect()
+			startPhase_disconnect();
 			break;
-		case 'test':
-			setPromptText('The current phase is TEST', null);
+		case 'hacking':
+			startPhase_hacking();
 			break;
 		default:
 			setPromptText('');
-			removeInputBox();
 	}
 }
 
@@ -80,7 +79,7 @@ function setPromptText(text, callback) {
 
 // ----------------------------------------------- //
 
-function updatePrompt_choosingAction() {
+function startPhase_choosingAction() {
 	setPromptText('> Stay connected?', function () {
 		choiceOutput.innerHTML = " [y/n] ";
 		maxInputLength = 1;
@@ -100,20 +99,21 @@ function submitChooseAction(choice) {
 
 // ----------------------------------------------- //
 
-function updatePrompt_disconnect() {
-	var disconnects = [];
+function startPhase_disconnect() {
+	var numDisconnects = 0;
 	var numRemain = 0;
 	var otherNames = [];
 	for (var i=0; i<state.players.length; ++i) {
 		var p = state.players[i];
 		if (p.state == 'disconnecting') {
-			disconnects.push();
+			numDisconnects += 1;
 			if (i != myPid) otherNames.push(p.name);
+		} else if (p.state != 'offline') {
+			numRemain += 1;
 		}
-		if (p.state == 'remain') numRemain += 1;
 	}
 	if (state.players[myPid].state == 'disconnecting') {
-		var numSecrets = 1 + (numRemain == 0);
+		var numSecrets = 1 + (numDisconnects == 1 && numRemain == 0);
 		setPromptText(meDisconnecting(otherNames, numSecrets), function () {
 			maxInputLength = 4 * numSecrets;
 			placeInputBox(
@@ -148,3 +148,7 @@ function submitChooseSecrets(text) {
 }
 
 // ----------------------------------------------------- //
+
+function startPhase_hacking() {
+
+}

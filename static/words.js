@@ -3,7 +3,6 @@ var lobby_message = "> Connecting to www.dark.net/exfil.EXE\n> pr0xy: blitting r
 
 
 
-
 function othersDisconnecting(otherNames) {
 	var message = '> ' + otherNames.join(' and ');
 	message += ' disconnected, '
@@ -22,9 +21,10 @@ function meDisconnecting(otherNames, numSecrets) {
 		message += ', ' + otherNames[i];
 	if (otherNames.length > 0) 
 		message += ' and ' + otherNames[0];
-	message += ' disconnected, you ' + state.commonText;
-	if (otherNames.length > 0) message += "s. Negotiate ";
-	else                       message += ". Choose ";
-	message += numSecrets + " secrets to steal."
+	message += ' disconnected. ';
+	if (otherNames.length > 0) message += "Negotiate ";
+	else                       message += "Choose ";
+	if (numSecrets > 1)  message += numSecrets + " secrets to steal: "
+	else                 message += "a secret to steal: ";
 	return message;
 }

@@ -106,6 +106,10 @@ function red(text) {
 	return '<font color=\"#ee2211\">' + text + '</font>';
 }
 
+function grey(text) {
+	return '<font color=\"#668866\">' + text + '</font>';
+}
+
 
 var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-!?#[]~:.$";
 function filterAlphabet(str) {

@@ -56,16 +56,16 @@ function drawBoard() {
 
 
   // Server //
-  var secrets = '<font color=\"grey\">EMPTY</font>';
-  var width = 7;
-  if (state.secrets.length > 0) { 
-    width = secretsRenderLength(state.secrets) + 2;
-    secrets = drawSecrets(state.secrets);
-    if (width % 2 == 0) {
-      secrets = ' ' + secrets;
-      width += 1;
-    }
+  var secrets = drawSecrets(state.secrets);
+  var width = secrets.length + 2
+  if (secrets.length == 0) {
+	secrets = '<font color=\"grey\">EMPTY</font>';
+  	width = 7;
   }
+  /*if (width % 2 == 0) {
+    secrets = ' ' + secrets;
+    width += 1;
+  }*/
   rows.push('+' + '='.repeat(width) + '+');
   rows.push('| ' + secrets + ' |');
   rows.push('+' + '='.repeat(width) + '+');
@@ -89,29 +89,38 @@ function drawPlayers() {
 	var rows = [[], [], [], []];
 	for (var i = 0; i < state.players.length; i++) {
 		var player = state.players[i];
-		var qmark = (player.state == 'choosingAction' && offBeat)
-		            || player.state == 'chosenAction';
 		if (player.state == 'disconnecting') {
 			if (offBeat) {
 				pipes.push(red('|'));
 				rows[0].push("+=======" + red("X") + "=======+");
 			} else {
 				pipes.push(' ');
-				rows[0].push("+===============+");
+				rows[0].push("+=======+=======+");
 			}
-		} else if (qmark) {
+		} else if ((player.state == 'choosingAction' && offBeat)
+		           || player.state == 'chosenAction') {
 			pipes.push('?');
 			rows[0].push("+=======?=======+");
 		} else {
 			pipes.push('|');
 		    rows[0].push("+=======+=======+");
 		};
+
 		var name = player.name + " ".repeat(10-player.name.length);
 		var money = "$" + player.money.toString(10);
 		money = " ".repeat(3 - money.length) + money;
 		rows[1].push("| " + name + money + " |");
-		rows[2].push("| >           < |");
+
+		rows[2].push("| >" + centerText(drawSecrets(player.secrets), 11) + "< |");	
+
 		rows[3].push("+===============+");
+
+		if (player.state == 'offline') {
+			pipes[pipes.length - 1] = ' ';
+			for (var j=0; j<4; ++j) {
+				rows[j][rows[j].length - 1] = grey(rows[j][rows[j].length - 1]);
+			}
+		}
 	}
 
 	return [
@@ -123,15 +132,23 @@ function drawPlayers() {
 
 function drawSecrets(secrets) {
   var out = [];
-  for (var i = 0; i < secrets.length; i++) {
-    var secret = secrets[i];
-    var color = {
-      'D':'aqua', 'G':'gold', 'S': 'white'
-    }[secret.substring(secret.length-1)];
-    out.push('<font color=\"' + color + '\">' + secret + "</font>");
-  }
+  for (var i = 0; i < secrets['4']; i++) out.push('4K');
+  for (var i = 0; i < secrets['3']; i++) out.push('3K');
+  for (var i = 0; i < secrets['2']; i++) out.push('2K');
+  for (var i = 0; i < secrets['!4']; i++) out.push('!4K');
+  for (var i = 0; i < secrets['!3']; i++) out.push('!3K');
+  for (var i = 0; i < secrets['!2']; i++) out.push('!2K');
   return out.join(' ');
 }
+
 function secretsRenderLength(secrets) {
-  return secrets.join(' ').length;
+  return drawSecrets(secrets).length;
+}
+
+
+function centerText(text, width) {
+	var pad = Math.floor((width - text.length) / 2)
+	text = ' '.repeat(pad) + text;
+	text += ' '.repeat(width - text.length);
+	return text;
 }
