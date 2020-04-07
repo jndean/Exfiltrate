@@ -386,7 +386,7 @@ var hackingLocation = [
     'behind the firewall',
     'from stackoverflow',
     'from the dark cloud',
-    'in the wifi'
+    'into the wifi'
 ];
 var hackingComment = [
     'Surely they won\'t fall for that?',

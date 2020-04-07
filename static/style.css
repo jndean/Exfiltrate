@@ -13,6 +13,10 @@ body {
 }
 pre {
   margin: 0;
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; 
 }
 
 .scanlines {
@@ -114,7 +118,7 @@ pre {
 #hackingRight {
   overflow: hidden;
   float: left;
-  width: 590px;
+  width: 585px;
   height: 100%;
   font: 15px Inconsolata, monospace;
   /*border: 1px solid red;
@@ -123,7 +127,7 @@ pre {
 #hackingDivide {
   overflow: hidden;
   float: left;
-  width: 20px;
+  width: 30px;
   height: 100%;
   text-align: center;
   /*border: 1px solid red;
@@ -153,4 +157,11 @@ pre {
   overflow-wrap: break-word
   /*border: 1px solid red;
   box-sizing: border-box;*/
+}
+
+#hackingExfiltrate {
+  width: 100%;
+  font: 30px Inconsolata, monospace;
+  text-align: center;
+  padding-top: 5px;
 }
