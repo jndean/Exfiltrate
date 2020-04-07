@@ -128,7 +128,7 @@ function startPhase_disconnect() {
 }
 
 function parseSecrets(text) {
-	var items = text.split(' ');
+	var items = text.split(',');
 	var secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0, "!2": 0};
 	for (var i=0; i<items.length; ++i) {
 		var item = items[i];
@@ -150,5 +150,19 @@ function submitChooseSecrets(text) {
 // ----------------------------------------------------- //
 
 function startPhase_hacking() {
+
+	if (state.currentHacker != myPid) {
+		setPromptText(
+		'> ' + state.players[state.currentHacker].name + 
+		' is trying to ' + state.commonText, null);
+	} else {
+		setPromptText(
+			"You are the hacker!",
+			() => setTimeout(function() {
+				board.style.visibility = 'hidden';
+				showHacking();
+			}, 1000)
+		);
+	}
 
 }

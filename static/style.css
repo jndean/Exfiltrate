@@ -15,35 +15,6 @@ pre {
   margin: 0;
 }
 
-#inputField {
-    color: rgba(0,0,0,0,);
-    font: 1rem Inconsolata, monospace;
-    background: transparent;
-    border: rgba(0,0,0,0);
-    width: 0px;
-  
-}
-
-#lobby {
-  padding: 0 0 0 3rem;
-}
-
-#board {
-  margin: 15px 0 0 0;
-  position: absolute;
-  top: 0%;
-  left: 50%;
-  -ms-transform: translate(-50%, 0%);
-  transform: translate(-50%, 0%);
-}
-
-#cmdline {
-  width: 600px;
-  display: inline-block;
-  text-align: left;
-}
-
-
 .scanlines {
   position:absolute;
   pointer-events: none;
@@ -70,4 +41,116 @@ pre {
   0% {
     top:99%;
   }
+}
+
+/* ---------------------- Lobby ------------------------------ */
+
+#inputField {
+    color: rgba(0,0,0,0,);
+    font: 1rem Inconsolata, monospace;
+    background: transparent;
+    border: rgba(0,0,0,0);
+    width: 0px;
+  
+}
+
+#lobby {
+  padding: 0 0 0 3rem;
+}
+
+#splash {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-shadow: -2px 0 0px #aa0000, 2px 0 0px #0000aa;
+  animation: flicker 0.5s linear infinite;
+}
+
+/*@keyframes flicker { 0% { opacity: 0.119; } 5% { opacity: 0.02841; } 10% { opacity: 0.35748; } 15% { opacity: 0.88852; } 20% { opacity: 0.9408; } 25% { opacity: 0.35088; } 30% { opacity: 0.22426; } 35% { opacity: 0.26418; } 40% { opacity: 0.09249; } 45% { opacity: 0.35312; } 50% { opacity: 0.89436; } 55% { opacity: 0.9574; } 60% { opacity: 0.19754; } 65% { opacity: 0.05086; } 70% { opacity: 0.12137; } 75% { opacity: 0.75791; } 80% { opacity: 0.89617; } 85% { opacity: 0.90183; } 90% { opacity: 0.20657; } 95% { opacity: 0.64125; } 100% { opacity: 0.78042; }}*/
+@keyframes flicker { 
+   0% { opacity: 1.0; }  2% { opacity: 0.9; }  4% {opacity: 1.0;}
+  20% { opacity: 1.0; } 22% { opacity: 0.9; } 24% {opacity: 1.0;}
+  40% { opacity: 1.0; } 42% { opacity: 0.9; } 44% {opacity: 1.0;}
+  60% { opacity: 1.0; } 62% { opacity: 0.9; } 64% {opacity: 1.0;}
+  80% { opacity: 1.0; } 82% { opacity: 0.9; } 84% {opacity: 1.0;}
+}
+
+/* ------------------------ Board ---------------------------- */
+
+#board {
+  margin: 15px 0 0 0;
+  position: absolute;
+  top: 0%;
+  left: 50%;
+  -ms-transform: translate(-50%, 0%);
+  transform: translate(-50%, 0%);
+}
+
+#cmdline {
+  width: 600px;
+  display: inline-block;
+  text-align: left;
+}
+
+
+/* ------------------------ Hacking ---------------------------- */
+
+ #hacking {
+  margin: 40px 0 0 0;
+  position: absolute;
+  top: 0%;
+  left: 50%;
+  -ms-transform: translate(-50%, 0%);
+  transform: translate(-50%, 0%);
+  width: 1200px;
+  height: 90%;
+}
+
+
+#hackingLeft,
+#hackingRight {
+  overflow: hidden;
+  float: left;
+  width: 590px;
+  height: 100%;
+  font: 15px Inconsolata, monospace;
+  /*border: 1px solid red;
+  box-sizing: border-box;*/
+}
+#hackingDivide {
+  overflow: hidden;
+  float: left;
+  width: 20px;
+  height: 100%;
+  text-align: center;
+  /*border: 1px solid red;
+  box-sizing: border-box;*/
+}
+
+#hackingTopRight {
+  overflow: hidden;
+  float: left;
+  width: 100%;
+  height: 70%;
+  /*border: 1px solid red;
+  box-sizing: border-box;*/
+}
+
+#hackingBottomRight {
+  float: left;
+  width: 100%;
+  height: 30%;
+  /*border: 1px solid red;
+  box-sizing: border-box;*/
+}
+#hackingPrompt {
+  float: left;
+  width: 100%;
+  height: 50%;
+  overflow-wrap: break-word
+  /*border: 1px solid red;
+  box-sizing: border-box;*/
 }

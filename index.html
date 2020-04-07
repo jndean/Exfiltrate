@@ -9,28 +9,45 @@
     <span class="scanlines"></span>
     <span class="scanline"></span>
     
-      <div class="lobby" id="lobby">
-        <pre><br><span id="joinlines"></span><span id="nameInput"></span></pre>
-      </div>
+    <div class="lobby" id="lobby">
+      <center><pre id="splash"></pre></center>
+      <pre><br><span id="joinlines"></span><span id="nameInput"></span></pre>
+    </div>
 
-      <div id="board">
-        <center>
-          <pre><span id="topology"></span></pre>
+    <div id="board">
+      <center>
+        <pre><span id="topology"></span></pre>
+        <br><br>
+        
+        <br>
+        <div id="cmdline">
+          <span id="prompt"></span>
+          <span id="choiceOutput"></span>
+          <span id="choiceInput"></span>
+          <span id="log"></span>
+        </div>
+      </center>
+    </div>
+
+    <div id="hacking">
+      <pre id="hackingLeft">Left</pre>
+      <div id="hackingDivide"></div>
+      <div id="hackingRight">
+        <pre id="hackingTopRight">Top Right</pre>
+        <div id="hackingRightDivide"></div>
+        <div id="hackingBottomRight">
+          <div id="hackingPrompt"></div>
           <br><br>
-          -----------------------------------------------------------------
-          <br>
-          <div id="cmdline">
-            <span id="prompt"></span>
-            <span id="choiceOutput"></span>
-            <span id="choiceInput"></span>
-            <span id="log"></span>
-          </div>
-        </center>
+          <div id="hackingProgressBar"></div>
+          <div id="hackingExfiltrate"></div>
+        </div>
+      </div>
     </div>
 
     <script src="/static/words.js"></script>
     <script src="/static/globals.js"></script>
     <script src="/static/lobby.js"></script>
+    <script src="/static/hacking.js"></script>
     <script src="/static/drawing.js"></script>
     <script src="/static/board.js"></script>
   </body>

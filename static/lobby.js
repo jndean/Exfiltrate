@@ -1,14 +1,18 @@
 
+var splash = document.getElementById("splash");
 var linesBox = document.getElementById("joinlines");
 var nameInput = document.getElementById("nameInput");
 
-
-animate_typing(
-	linesBox, 
-	"", //lobby_message,
-	typing_delay,
-	() => placeInputBox(nameInput, validNameCheck, joinWithName)
-);
+document.body.onkeydown = function () {
+	splash.parentNode.removeChild(splash);
+	document.body.onkeydown = null;
+	animate_typing(
+		linesBox, 
+		'', //lobby_message,
+		typing_delay,
+		() => placeInputBox(nameInput, validNameCheck, joinWithName)
+	);
+}
 
 function joinWithName(name) {
 	removeInputBox();

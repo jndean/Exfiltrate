@@ -1,7 +1,7 @@
 var socket = io();
 
 // Params! //
-var typing_delay = 2;
+var typing_delay = 1; //10;
 
 
 // State! //
@@ -111,7 +111,7 @@ function grey(text) {
 }
 
 
-var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-!?#[]~:.$";
+var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-!?#[]~:.,$";
 function filterAlphabet(str) {
   return str.split('')
             .filter(x => alphabet.includes(x))

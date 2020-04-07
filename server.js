@@ -62,7 +62,7 @@ io.on('connection', function(socket) {
 
   socket.on('join game', function(name) {
     console.log('Connecting:', name);
-    if (name in name_to_pid && players[name_to_pid[name]].online) {
+    if (name in name_to_pid && players[name_to_pid[name]].connected) {
       socket.emit('reject name', 'That user is already connected');
       return;
     } else if (phase != 'lobby' && !(name in name_to_pid)) {
@@ -274,6 +274,7 @@ function startHacking() {
       if (players[currentHacker].state != 'offline') break;
     }
   }
+  commonText = randomHackingText();
 
   broadcastState();
 }
@@ -321,8 +322,88 @@ function rng(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-var insultAdjective = ['two-bit', 'depricated', 'packet-dropping', 'hackless', 'gui-using', 'bit-twiddling', 'off-by-one'];
-var insultNoun = ['script kiddie', 'socket hopper', 'anti-pattern', 'no-op', 'code monkey', 'core dump', 'null pointer'];
+
+
+// ----------------------- Text generation ------------------------------ //
+
+var insultAdjective = [
+    'two-bit',
+    'depricated',
+    'packet-dropping',
+    'hackless',
+    'gui-using',
+    'bit-twiddling',
+    'off-by-one'
+];
+var insultNoun = [
+    'script kiddie',
+    'socket hopper',
+    'anti-pattern',
+    'no-op',
+    'code monkey',
+    'core dump',
+    'null pointer'
+];
 function randomInsult() {
   return rng(insultAdjective) + ' ' + rng(insultNoun);
+}
+
+
+var hackingVerb = [
+    'download',
+    'inject',
+    'bootstrap',
+    'escalate',
+    'spoof',
+    'whack',
+    'side-load',
+    'cross-compile',
+];
+var hackingNoun = [
+    'a rootkit',
+    'a key logger',
+    'a packet sniffer',
+    'a buffer overflow',
+    'a ROP chain',
+    'a zero-day',
+    'a backdoor',
+    'a modchip',
+    'a hacked copy of MS paint',
+    'a botnet',
+    'the konami code',
+    'more RAM',
+    'spicey memes',
+    'blue shellcode'
+];
+var hackingLocation = [
+    'in the BIOS',
+    'on the mainframe',
+    'in system32',
+    'in the blockchain',
+    'in the source code',
+    'through the PCIe slots',
+    'through the encryption',
+    'behind the firewall',
+    'from stackoverflow',
+    'from the dark cloud',
+    'in the wifi'
+];
+var hackingComment = [
+    'Surely they won\'t fall for that?',
+    'That hasn\'t worked since the 90\'s...',
+    'Classic.',
+    'Their hacking skills are over 9000!',
+    'Avert your eyes.',
+    'Do they know that doesn\'t make any sense?',
+    'It\'s an older move but it checks out.',
+    'It must be a unix thing.',
+    'That\'s a good trick.'
+];
+
+function randomHackingText() {
+  return [rng(hackingVerb),
+          rng(hackingNoun),
+          rng(hackingLocation) + '.',
+          rng(hackingComment),
+         ].join(' ');
 }
