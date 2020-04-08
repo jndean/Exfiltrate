@@ -12,37 +12,9 @@ function drawBoard() {
 
   var rows = [];
 
-  // Agents //
-  var width = 22;
-  var agent_rows = [[], [], [], []];
-  for (var i=0; i<agents.length; i++) {
-    var agent = agents[i];
-    agent_rows[0].push('+' + '='.repeat(width-2) + '+');
-
-    var lhs = '| ' + agent.name;
-    var prob = Math.floor(agent.counter * 100);
-    var rhs = '[' + red(prob + '%') + '] |';
-    var ln = lhs + ' '.repeat(width - lhs.length - 7) + rhs;
-    agent_rows[1].push(ln);
-
-    prob = Math.floor(agent.hack * 100);
-    lhs = '| > ' + drawSecrets(agent.secrets);
-    rhs = '[<font color=\"#33cc33\">' + prob + '%</font>] |';
-    lhs += ' '.repeat(width - secretsRenderLength(agent.secrets) - 11);
-    agent_rows[2].push(lhs + rhs);
-
-    agent_rows[3].push('+' + '='.repeat(width-2) + '+');
-  }
-  rows = rows.concat(agent_rows.map(row => row.join('   ')));
-
-  rows.push(Array(agents.length).fill('|').join(' '.repeat(width+3)));
-  var bar = Array(agents.length).fill('+').join('-'.repeat(width+3));
-  var mid = Math.floor(bar.length / 2);
-  rows.push(bar.slice(0, mid) + '+' + bar.slice(mid+1));
-
+  rows = rows.concat(drawAgents());
 
   // Firewall //
-  rows.push('|');
   rows.push('|<b>');
   for (var i=0; i<3; i++) {
     var status = state.firewall[i];
@@ -62,10 +34,6 @@ function drawBoard() {
 	secrets = '<font color=\"grey\">EMPTY</font>';
   	width = 7;
   }
-  /*if (width % 2 == 0) {
-    secrets = ' ' + secrets;
-    width += 1;
-  }*/
   rows.push('+' + '='.repeat(width) + '+');
   rows.push('| ' + secrets + ' |');
   rows.push('+' + '='.repeat(width) + '+');
@@ -82,9 +50,41 @@ function drawBoard() {
   topology.innerHTML = rows.join('\n');	
 }
 
+function drawAgents() {
+  	var agents = state.agents;
+    var width = 21;
+    var agent_rows = [[], [], [], []];
+    for (var i=0; i<agents.length; i++) {
+        var agent = agents[i];
+        var outline = '=';
+        var title = '+' + outline.repeat(6) + '[LVL.' + agent.level +']' + outline.repeat(6) + '+';
+        agent_rows[0].push(title);
+   
+        var lhs = '| ' + padText(agent.name, 11);
+        var prob = Math.floor(agent.pCounter * 100);
+        var rhs = ' [' + red(prob + '%') + '] |';
+        var ln = lhs + rhs;
+        agent_rows[1].push(ln);
+   
+        prob = Math.floor(agent.pHack * 100);
+        ln = '| ' + padText(drawSecrets(agent.secrets), 12);
+        ln += '[<font color=\"#33cc33\">' + prob + '%</font>] |';
+        agent_rows[2].push(ln);
+   
+        agent_rows[3].push('+' + padText('+', width-2, outline) + '+');
+    }
+  
+    var pipes = Array(agents.length).fill('|').join(' '.repeat(width+2));
+    var bar = Array(agents.length).fill('+').join('-'.repeat(width+2));
+    var mid = Math.floor(bar.length / 2);
+    bar = bar.slice(0, mid) + '+' + bar.slice(mid+1);
+    return agent_rows.map(row => row.join('   '))
+                     .concat([pipes, bar]);
+}
+
+
 
 function drawPlayers() {
-
 	var pipes = [];
 	var rows = [[], [], [], []];
 	for (var i = 0; i < state.players.length; i++) {

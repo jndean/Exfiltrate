@@ -159,7 +159,6 @@ function startPhase_hacking() {
 		setPromptText(
 			"You are the hacker!",
 			() => setTimeout(function() {
-				board.style.visibility = 'hidden';
 				showHacking();
 			}, 1000)
 		);

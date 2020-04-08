@@ -1,7 +1,7 @@
 var socket = io();
 
 // Params! //
-var typing_delay = 1; //10;
+var typing_delay = 15;
 
 
 // State! //
@@ -14,9 +14,10 @@ var beatInterval = setInterval(
 );
 
 
-// DOM! //
+// The different screens //
 var lobby = document.getElementById("lobby");
 var board = document.getElementById("board");
+var hacking = document.getElementById("hacking");
 
 
 // Utility functions! //
@@ -121,4 +122,14 @@ function filterAlphabet(str) {
 
 function rng(items) {
 	return items[Math.floor(Math.random() * items.length)];
+}
+
+function padText(text, width, padding = ' ') {
+	text += padding.repeat(
+		Math.max(0, Math.ceil((width - text.length) / 2))
+	);
+	text = padding.repeat(
+		Math.max(0, width - text.length)
+	) + text;
+	return text;
 }

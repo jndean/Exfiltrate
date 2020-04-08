@@ -26,13 +26,17 @@ server.listen(port, function() {
 
 // Game setup //
 var agent_types = [
-  {secrets: ['3', '2'], counter: 1/6, hack: 4/6}, // Bronze die
-  {secrets: ['4', '3', '3'], counter: 2/6, hack: 3/6}, // Silver die
-  {secrets: ['4'], counter: 2/6, hack: 2/6}, // Gold die
-  {secrets: ['!4', '!3', '!3'], counter: 2/6, hack: 3/6} // Red die
+  {level: 1, pCounter: 1/6, pHack: 4/6, secrets: { // Bronze die
+    '2': 1, '3': 1, '4': 0, '!3': 0, '!4': 0}}, 
+  {level: 2, pCounter: 2/6, pHack: 3/6, secrets: { // Silver die
+    '2': 0, '3': 2, '4': 1, '!3': 0, '!4': 0}}, 
+  {level: 3, pCounter: 2/6, pHack: 2/6, secrets: { // Gold die
+    '2': 0, '3': 0, '4': 1, '!3': 0, '!4': 0}}, 
+  {level: 2, pCounter: 2/6, pHack: 3/6, secrets: { // Red die
+    '2': 0, '3': 0, '4': 0, '!3': 2, '!4': 1}} 
 ];
 
-var agent_names = ["Lev.bot", "Mr Anderson", "Chuck Norris", "Obama", "C00k1e", "xXx_milh"];
+var agent_names = ["Lev.bot", "Mr Anderson", "ChuckNorris", "Obama", "C00k1e", "J0s3f"];
 
 
 var socket_to_name = {};
@@ -43,6 +47,7 @@ var round = 0;
 var phase = "lobby";
 var secrets = {"4": 1, "3": 2, "2": 0, "!4": 0, "!3": 0};
 var firewall = ["off", "change", "on"]; // Types: "on", "off", "change"
+var firewallsDown = 0;
 var bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
 var agents = [];
 var choices = [];
@@ -113,12 +118,15 @@ io.on('connection', function(socket) {
 
   socket.on(
     'chooseAction',
-    (choice) => recieveActionChoice(pid, choice)
+    (choice) => receiveActionChoice(pid, choice)
   );
-
   socket.on(
     'chooseSecrets',
-    (choice) => recieveSecretsChoice(pid, choice)
+    (choice) => receiveSecretsChoice(pid, choice)
+  );
+  socket.on(
+    'finishHacking',
+    () => receiveFinishHacking(pid)
   );
 
 });
@@ -152,18 +160,19 @@ function setStateOfAllOnlinePlayers(state) {
 
 function startGame() {
   for (var i=0; i<players.length; i++) {
-    players[i].points = 0;
+    players[i].money = 0;
   }
-  bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
-  firewall = ['on', 'on', 'on'];
-
-  console.log("Starting", players);
   startRound(0);
 }
 
 
 function startRound(round_num) {
   round = round_num;
+
+  bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
+  firewallsDown = 0;
+  firewall = ["on", "on", "on"];
+
   newAgent();
   newAgent();
   broadcastState();
@@ -182,7 +191,7 @@ function startChoosingAction() {
     broadcastState();
 }
 
-function recieveActionChoice(pid, choice) {
+function receiveActionChoice(pid, choice) {
     if (phase != 'choosingAction') return;
     choices[pid] = choice == 'y';
     players[pid].state = 'chosenAction';
@@ -224,7 +233,7 @@ function startDisconnect() {
     broadcastState();
 }
 
-function recieveSecretsChoice(pid, choice) {
+function receiveSecretsChoice(pid, choice) {
   if (phase != 'disconnect' || players[pid].state != 'disconnecting') return;
   choices[pid] = choice;
   players[pid].secrets = choice;
@@ -275,10 +284,42 @@ function startHacking() {
     }
   }
   commonText = randomHackingText();
-
   broadcastState();
 }
 
+function receiveFinishHacking(pid) {
+  if (phase != 'hacking' || currentHacker != pid) return;
+  for (var i=0; i<agents.length; ++i) {
+    var agent = agents[i];
+
+    // Roll the die! //
+    var roll = Math.random();
+
+    if (roll < agent.pCounter) {
+      agent.state = 'counter';
+      if (firewallsDown < 3) firewall[firewallsDown] = "change";
+      firewallsDown += 1;
+      agent.secrets = [];
+
+    } else if (roll < agent.pCounter + agent.pHack) {
+      agent.state = 'hacked';
+      agent.secrets = randomSecret(agent.secrets);
+    }
+  }
+  broadcastState();
+}
+
+function randomSecret(secrets) {
+  var pool = [];
+  for (var s in secrets) {
+    for (var i=0; i<secrets[s]; ++i) {
+      pool.push(s);
+    }
+  }
+  var ret = {'4':0, '3':0, '2':0, '!4':0, '3!':0};
+  ret[pool[Math.floor(pool.length * Math.random())]] = 1;
+  return ret;
+}
 // -------------------------------------------------- //
 
 
@@ -287,14 +328,18 @@ function newAgent() {
     console.log("Drawing from empty bag");
     return;
   }
-  var template = agent_types[bag.pop()];
-  var hack = template.hack + (0.06 * Math.random()) - 0.03;
-  var counter = template.counter + (0.06 * Math.random()) - 0.03;
+  var agent_type = bag.pop();
+  var template = agent_types[agent_type];
+  var pHack = template.pHack + (0.06 * Math.random()) - 0.03;
+  var pCounter = template.pCounter + (0.06 * Math.random()) - 0.03;
+  var name = '<font color=#666666>Shad0Broker</font>';
+  if (agent_type != 3) name = agent_names.pop();
   agent_names = shuffle(agent_names);
   var agent = {
-    name: agent_names.pop(),
-    hack: hack,
-    counter: counter,
+    level: template.level,
+    name: name,
+    pHack: pHack,
+    pCounter: pCounter,
     secrets: template.secrets,
     state: 'connecting'
   };
@@ -380,7 +425,7 @@ var hackingLocation = [
     'on the mainframe',
     'in system32',
     'in the blockchain',
-    'in the source code',
+    'into the source code',
     'through the PCIe slots',
     'through the encryption',
     'behind the firewall',
