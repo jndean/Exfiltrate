@@ -16,10 +16,10 @@ function openBoard() {
 	board.style.visibility = 'visible';
 	drawBoard();
 
-	clearInterval(beatInterval);
-	beatInterval = setInterval(
-		function() {offBeat = !offBeat; drawBoard();},
-		700
+	clearInterval(blinkInterval);
+	blinkInterval = setInterval(
+		function() {offBlink = !offBlink; drawBoard();},
+		blinkDelay
 	);
 }
 
@@ -42,8 +42,14 @@ function updateState(new_state) {
 		case 'disconnect':
 			startPhase_disconnect();
 			break;
+		case 'noDisconnects':
+			startPhase_noDisconnects();
+			break;
 		case 'hacking':
 			startPhase_hacking();
+			break;
+		case 'results':
+			startPhase_results();
 			break;
 		default:
 			setPromptText('');
@@ -72,7 +78,7 @@ function setPromptText(text, callback) {
 	animate_typing(prompt, text, 10, function() {
 		prompt.innerHTML = promptTarget;
 		animatingPrompt = false;
-		if (promptCallback != null) callback();
+		if (promptCallback != null) promptCallback();
 	});
 }
 
@@ -147,6 +153,10 @@ function submitChooseSecrets(text) {
 	socket.emit('chooseSecrets', secrets);
 }
 
+function startPhase_noDisconnects() {
+	setPromptText(noDisconnects(), null);
+}
+
 // ----------------------------------------------------- //
 
 function startPhase_hacking() {
@@ -164,4 +174,36 @@ function startPhase_hacking() {
 		);
 	}
 
+}
+
+// ----------------------------------------------------- //
+
+function startPhase_results() {
+	setInterval(disconnectAgent, 3000);
+}
+
+
+function disconnectAgent() {
+	if (state.phase != 'results') 
+		return;
+	for (var i=0; i<state.agents.length; ++i) {
+		var agent = state.agents[i];
+		if (agent.state == 'counter') {
+			for (var j=0; j<3; ++j) {
+				if (state.firewall[j] == 'change') {
+					state.firewall[j] = 'off';
+					break;
+				}
+			}
+		} else if (agent.state == 'hacked') {
+			for (s in agent.secrets) {
+				state.secrets[s] += agent.secrets[s];
+			}
+		} else {
+			continue;
+		}
+		state.agents.splice(i, 1);
+		setTimeout(disconnectAgent, 1000);
+		return;
+  	}
 }

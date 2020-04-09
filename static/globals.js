@@ -1,16 +1,17 @@
 var socket = io();
 
 // Params! //
-var typing_delay = 15;
+var typing_delay = 1;
 
 
 // State! //
 var state = undefined;
 
-var offBeat = false;  // For doing blinking characters etc
-var beatInterval = setInterval(
-	function(){offBeat = !offBeat},
-	700
+var offBlink = false;  // For doing blinking characters etc
+var blinkDelay = 500;
+var blinkInterval = setInterval(
+	function(){offBlink = !offBlink},
+	blinkDelay
 );
 
 
@@ -74,7 +75,7 @@ function placeInputBox(location, validInput, action) {
 	document.body.onkeyup = () => drawInputDisplay(true);
 	caretInterval = setInterval(function () {
 		caret=!caret; drawInputDisplay();
-	}, 700);
+	}, blinkDelay);
 
 	// Callback on enter //
 	document.body.onkeydown = function(e){
@@ -112,6 +113,7 @@ function grey(text) {
 }
 
 
+
 var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-!?#[]~:.,$";
 function filterAlphabet(str) {
   return str.split('')
@@ -125,6 +127,8 @@ function rng(items) {
 }
 
 function padText(text, width, padding = ' ') {
+	if (text.includes('<font color=')) width += 27;
+	if (text.includes('</b>')) width += 7;
 	text += padding.repeat(
 		Math.max(0, Math.ceil((width - text.length) / 2))
 	);

@@ -33,7 +33,7 @@ function showHacking() {
 function hideHacking() {
 	document.body.onkeydown = null;
 	document.body.style.animation = '';
-	document.body.style.backgroundImage = "radial-gradient(rgba(0, 75, 35, 0.75), black 120%)";
+	document.body.style.backgroundImage = "radial-gradient(rgba(0, 75, 35, 1), black 120%)";
 	document.body.style.color = '#44ff44';
 	skewBox.style.animation = "";
 	hackingProgressBar.style.animation = "";
@@ -111,7 +111,7 @@ function setEffects() {
 		var rgb = [Math.round(t*0  + s*100),
 				   Math.round(t*75 + s*20),
 		           Math.round(t*35 + s*0)];
-		var grad = "radial-gradient(rgba(" + rgb.join(',') + ",0.75), black 120%";
+		var grad = "radial-gradient(rgba(" + rgb.join(',') + ", 1), black 120%";
 		document.body.style.backgroundImage = grad;
 
 		rgb = [Math.round(t*0x44 + s*0xff),

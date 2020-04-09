@@ -29,6 +29,9 @@ function meDisconnecting(otherNames, numSecrets) {
 	return message;
 }
 
+function noDisconnects() {
+	return "> Nobody disconnected. In for a bit, in for a byte.";
+}
 
 function hackerPrompt() {
 	var message = '> Hack the enemy agents and steal their secrets<br>> Hint: ';

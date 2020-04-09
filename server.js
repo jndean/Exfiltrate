@@ -46,7 +46,7 @@ var players = [];
 var round = 0;
 var phase = "lobby";
 var secrets = {"4": 1, "3": 2, "2": 0, "!4": 0, "!3": 0};
-var firewall = ["off", "change", "on"]; // Types: "on", "off", "change"
+var firewall = ["on", "on", "on"]; // Types: "on", "off", "change"
 var firewallsDown = 0;
 var bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
 var agents = [];
@@ -83,7 +83,6 @@ io.on('connection', function(socket) {
         money: 0,
         connected: true,
         state: '',
-        message: null,
         secrets: [],
       };
     } else {
@@ -108,8 +107,7 @@ io.on('connection', function(socket) {
 
   socket.on('start', function(action) {
     if (action != "now" || phase != "lobby") return;
-    var num_players = Object.keys(players).length;
-    if (num_players < 0  || num_players > 6) {
+    if (players.length < 0  || players.length > 6) {
       console.log('Incorrect number of players:', num_players);
       return;
     }
@@ -186,6 +184,9 @@ function startRound(round_num) {
 
 function startChoosingAction() {
     phase = "choosingAction";
+    for (var i=0; i<agents.length; ++i) {
+      agents[i].state = '';
+    }
     choices = Array(players.length).fill(null);
     setStateOfAllOnlinePlayers('choosingAction');
     broadcastState();
@@ -205,7 +206,6 @@ function receiveActionChoice(pid, choice) {
 // ---------------------- Disconnecting (ingame) ---------------------- //
 
 function startDisconnect() {
-    phase = 'disconnect';
 
     // Set display states //
     var numDisconnects = 0;
@@ -219,18 +219,17 @@ function startDisconnect() {
     }
 
     if (numDisconnects == 0) {
-      // Move onto hacking //
-      // With delay to show everybody is connected? //
+      // Move onto hacking with delay to show everybody is connected? //
       phase = 'noDisconnects';
       broadcastState();
       setTimeout(startHacking, 2000);
     } else {
       // Wait for secret negotiation messages //
+      phase = 'disconnect';
       choices = Array(players.length).fill(null);
+      commonText = randomInsult();
+      broadcastState();
     }
-
-    commonText = randomInsult();
-    broadcastState();
 }
 
 function receiveSecretsChoice(pid, choice) {
@@ -289,6 +288,8 @@ function startHacking() {
 
 function receiveFinishHacking(pid) {
   if (phase != 'hacking' || currentHacker != pid) return;
+  phase = 'results';
+  var numDisconnects = agents.length;
   for (var i=0; i<agents.length; ++i) {
     var agent = agents[i];
 
@@ -304,9 +305,14 @@ function receiveFinishHacking(pid) {
     } else if (roll < agent.pCounter + agent.pHack) {
       agent.state = 'hacked';
       agent.secrets = randomSecret(agent.secrets);
+    
+    } else {
+      agent.state = '';
+      numDisconnects -= 1;
     }
   }
   broadcastState();
+  setTimeout(finishResults, 3500 + 1000 * numDisconnects);
 }
 
 function randomSecret(secrets) {
@@ -320,6 +326,27 @@ function randomSecret(secrets) {
   ret[pool[Math.floor(pool.length * Math.random())]] = 1;
   return ret;
 }
+
+function finishResults() {
+  for (var i=0; i<agents.length; ++i) {
+    var agent = agents[i];
+    if (agent.state == 'counter') {
+      for (var j=0; j<3; ++j) {
+        if (firewall[j] == 'change') {
+          firewall[j] = 'off';
+          break;
+        }
+      }
+    } else if (agent.state == 'hacked') {
+      for (s in agent.secrets) {
+        state.secrets[s] += agent.secrets[s];
+      }
+    }
+  }
+  agents = agents.filter(a => a.state == '');
+  broadcastState();
+}
+
 // -------------------------------------------------- //
 
 

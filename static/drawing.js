@@ -19,7 +19,7 @@ function drawBoard() {
   for (var i=0; i<3; i++) {
     var status = state.firewall[i];
     var colour = 'aqua', sym = '+';
-    if (status == "off" || (status == "change" && offBeat)) {
+    if (status == "off" || (status == "change" && offBlink)) {
       colour = 'red', sym = 'x';
     }
     rows.push('<font color=\"' + colour + "\">[" + sym + ']</font>');
@@ -31,11 +31,11 @@ function drawBoard() {
   var secrets = drawSecrets(state.secrets);
   var width = secrets.length + 2
   if (secrets.length == 0) {
-	secrets = '<font color=\"grey\">EMPTY</font>';
+	  secrets = '<font color=\"grey\">EMPTY</font>';
   	width = 7;
   }
   rows.push('+' + '='.repeat(width) + '+');
-  rows.push('| ' + secrets + ' |');
+  rows.push('| <font color=\"gold\">' + secrets + '</font> |');
   rows.push('+' + '='.repeat(width) + '+');
 
 
@@ -54,34 +54,81 @@ function drawAgents() {
   	var agents = state.agents;
     var width = 21;
     var agent_rows = [[], [], [], []];
+    var pipes = [];
+    var connectors = [];
     for (var i=0; i<agents.length; i++) {
         var agent = agents[i];
-        var outline = '=';
-        var title = '+' + outline.repeat(6) + '[LVL.' + agent.level +']' + outline.repeat(6) + '+';
+
+        if (agent.state == 'counter') {
+          if (offBlink) {
+            agent_rows[0].push(red('+-------------------+'));
+            agent_rows[1].push(red('| ' + padText(agent.name + ' ;)', width-4) + ' |'));
+            agent_rows[2].push(red('| [x] PWNED YOU [x] |'));
+            agent_rows[3].push(red('+---------X---------+'));
+            pipes.push(' ');
+            connectors.push('-');
+          } else {
+            agent_rows[0].push(red('+-------------------+'));
+            agent_rows[1].push(red('| ' + padText(agent.name + ' :)', width-4) + ' |'));
+            agent_rows[2].push(red('|     Pwned you     |'));
+            agent_rows[3].push(red('+---------') + '+' + red('---------+'));
+            pipes.push('|');
+            connectors.push('+');
+          }
+          continue;
+        }
+        if (agent.state == 'hacked') {
+          if(offBlink) {
+            agent_rows[0].push('+-------------------+');
+            agent_rows[1].push('| ' + padText(agent.name + ' :O', width-4) + ' |');
+            var ln = '|  HACKED FOR <b><font color=\"#FFD700\">';
+            ln += padText('['+drawSecrets(agent.secrets)+']', 5) + '</font></b> |';
+            agent_rows[2].push(ln);
+            agent_rows[3].push('+---------' + red('X') + '---------+');
+            pipes.push(' ');
+            connectors.push('-');
+          } else {
+            agent_rows[0].push('+-------------------+');
+            agent_rows[1].push('| ' + padText(agent.name + ' :(', width-4) + ' |');
+            agent_rows[2].push('|  Hacked for  ' + padText(drawSecrets(agent.secrets), 3) + '  |');
+            agent_rows[3].push('+---------+---------+');
+            pipes.push('|');
+            connectors.push('+');
+          }
+          continue;
+        }
+        var title = '+======[LVL.' + agent.level +']======+';
         agent_rows[0].push(title);
    
-        var lhs = '| ' + padText(agent.name, 11);
+        var ln = '| ' + padText(agent.name, 11);
         var prob = Math.floor(agent.pCounter * 100);
-        var rhs = ' [' + red(prob + '%') + '] |';
-        var ln = lhs + rhs;
+        ln += ' [' + red(prob + '%') + '] |';
         agent_rows[1].push(ln);
    
-        prob = Math.floor(agent.pHack * 100);
         ln = '| ' + padText(drawSecrets(agent.secrets), 12);
+        prob = Math.floor(agent.pHack * 100);
         ln += '[<font color=\"#33cc33\">' + prob + '%</font>] |';
         agent_rows[2].push(ln);
    
-        agent_rows[3].push('+' + padText('+', width-2, outline) + '+');
+
+        if (agent.state == 'connecting' && offBlink) {
+          agent_rows[3].push('+' + '='.repeat(width-2) + '+');
+          pipes.push(' ');
+          connectors.push('-');
+        } else {
+          agent_rows[3].push('+' + padText('+', width-2, '=') + '+');
+          pipes.push('|');
+          connectors.push('+');
+        }
     }
   
-    var pipes = Array(agents.length).fill('|').join(' '.repeat(width+2));
-    var bar = Array(agents.length).fill('+').join('-'.repeat(width+2));
+    pipes = pipes.join(' '.repeat(width+2));
+    var bar = connectors.join('-'.repeat(width+2));
     var mid = Math.floor(bar.length / 2);
     bar = bar.slice(0, mid) + '+' + bar.slice(mid+1);
     return agent_rows.map(row => row.join('   '))
                      .concat([pipes, bar]);
 }
-
 
 
 function drawPlayers() {
@@ -90,14 +137,14 @@ function drawPlayers() {
 	for (var i = 0; i < state.players.length; i++) {
 		var player = state.players[i];
 		if (player.state == 'disconnecting') {
-			if (offBeat) {
+			if (offBlink) {
 				pipes.push(red('|'));
 				rows[0].push("+=======" + red("X") + "=======+");
 			} else {
 				pipes.push(' ');
 				rows[0].push("+=======+=======+");
 			}
-		} else if ((player.state == 'choosingAction' && offBeat)
+		} else if ((player.state == 'choosingAction' && offBlink)
 		           || player.state == 'chosenAction') {
 			pipes.push('?');
 			rows[0].push("+=======?=======+");
