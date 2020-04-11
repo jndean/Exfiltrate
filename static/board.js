@@ -36,6 +36,9 @@ function updateState(new_state) {
   	choiceOutput.innerHTML = "";
 	removeInputBox();
 	switch (state.phase) {
+		case 'connectingAgents':
+			startPhase_connectingAgents();
+			break;
 		case 'choosingAction':
 			startPhase_choosingAction();
 			break;
@@ -63,30 +66,51 @@ function updateState(new_state) {
 var choiceInput = document.getElementById("choiceInput");
 var choiceOutput = document.getElementById("choiceOutput");
 var prompt = document.getElementById("prompt");
-var animating_prompt = false;
-var target_prompt = null;
+var log = document.getElementById("log");
+var promptText = null;
 var promptCallback = null;
 
 function setPromptText(text, callback) {
-	promptTarget = text;
-	promptCallback = callback;
-	if (animating_prompt || prompt.innerHTML == text) {
+	if (promptText != null) {  // Prinitng in progress //
+		printToLog(promptText);
+		if (promptCallback != null) promptCallback();
+		promptText = text;
+		promptCallback = callback;
 		return;
 	}
-	animatingPrompt = true;
+	printToLog(prompt.innerHTML + choiceOutput.innerHTML);
 	prompt.innerHTML = "";
-	animate_typing(prompt, text, 10, function() {
-		prompt.innerHTML = promptTarget;
-		animatingPrompt = false;
+	promptText = text;
+	promptCallback = callback;
+	animate_typing(prompt, text, typing_delay, function() {
+		prompt.innerHTML = promptText;
 		if (promptCallback != null) promptCallback();
+		promptText = null;
+		promptCallback = null;
 	});
+}
+
+function printToLog(text) {
+	if (text == null || text == '') return;
+	var t = new Date();
+	var stamp = [t.getHours(), t.getMinutes(), t.getSeconds()].join(':');
+	var lines = log.innerHTML.split('<br>');
+	while (lines.length > 8) lines.pop()
+		lines.unshift('[' + stamp + '] ' + text);
+	log.innerHTML = lines.join('<br>');
 }
 
 
 // ----------------------------------------------- //
 
+function startPhase_connectingAgents() {
+	setPromptText('More opponents are connecting...', null);
+}
+
+// ----------------------------------------------- //
+
 function startPhase_choosingAction() {
-	setPromptText('> Stay connected?', function () {
+	setPromptText('Stay connected?', function () {
 		choiceOutput.innerHTML = " [y/n] ";
 		maxInputLength = 1;
 		placeInputBox(
@@ -124,7 +148,7 @@ function startPhase_disconnect() {
 			maxInputLength = 4 * numSecrets;
 			placeInputBox(
 				choiceInput,
-				(t) => parseSecrets(t) != null,
+				(t) => parseSecrets(t, numSecrets) != null,
 				submitChooseSecrets
 			);
 		});
@@ -133,9 +157,10 @@ function startPhase_disconnect() {
 	}
 }
 
-function parseSecrets(text) {
+function parseSecrets(text, maxSecrets) {
 	var items = text.split(',');
 	var secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0, "!2": 0};
+	var total = 0;
 	for (var i=0; i<items.length; ++i) {
 		var item = items[i];
 		if (['k', 'K'].includes(item.slice(-1))) {
@@ -143,7 +168,9 @@ function parseSecrets(text) {
 		}
 		if (!(item in secrets)) return null;
 		secrets[item] += 1;
+		total += 1;
 	}
+	if (total > maxSecrets) return null;
 	return secrets;
 }
 
@@ -163,14 +190,12 @@ function startPhase_hacking() {
 
 	if (state.currentHacker != myPid) {
 		setPromptText(
-		'> ' + state.players[state.currentHacker].name + 
+		state.players[state.currentHacker].name + 
 		' is trying to ' + state.commonText, null);
 	} else {
 		setPromptText(
 			"You are the hacker!",
-			() => setTimeout(function() {
-				showHacking();
-			}, 1000)
+			() => setTimeout(showHacking, 1000)
 		);
 	}
 
@@ -178,32 +203,53 @@ function startPhase_hacking() {
 
 // ----------------------------------------------------- //
 
+
+var disconnectPosition;
+
 function startPhase_results() {
-	setInterval(disconnectAgent, 3000);
+	setPromptText('');
+	disconnectPosition = 0;
+	setTimeout(disconnectAgent, 3000);
 }
 
-
+// TODO: this should happen serverside, could be made synchronous with 
+// blinks by having a phase check before drawBoard in state update message
 function disconnectAgent() {
-	if (state.phase != 'results') 
-		return;
-	for (var i=0; i<state.agents.length; ++i) {
-		var agent = state.agents[i];
-		if (agent.state == 'counter') {
-			for (var j=0; j<3; ++j) {
-				if (state.firewall[j] == 'change') {
-					state.firewall[j] = 'off';
-					break;
-				}
-			}
-		} else if (agent.state == 'hacked') {
-			for (s in agent.secrets) {
-				state.secrets[s] += agent.secrets[s];
-			}
+	if (state.phase != 'results') return;
+	if (disconnectPosition >= state.agents.length) return;
+
+	var agent = state.agents[disconnectPosition];
+	
+	if (agent.state == 'remain') {
+		// No delay if no disconnect //
+		disconnectPosition += 1;
+		if (disconnectPosition == disconnectPosition.length) {
+			setPromptText(agentRemains(agent.name), null);
 		} else {
-			continue;
+			printToLog(agentRemains(agent.name));
+			disconnectAgent();
 		}
-		state.agents.splice(i, 1);
-		setTimeout(disconnectAgent, 1000);
 		return;
-  	}
+	}
+
+	var msg;
+	if (agent.state == 'counter') {
+		msg = agentCounterHacked(agent.name)
+		for (var j=0; j<3; ++j) {
+			if (state.firewall[j] == 'change') {
+				state.firewall[j] = 'off';
+				break;
+			}
+		}
+	} else if (agent.state == 'hacked') {
+		msg = agentHacked(agent.name, drawSecrets(agent.secrets));
+		for (s in agent.secrets) {
+			state.secrets[s] += agent.secrets[s];
+		}
+	}
+
+	console.log(msg, agent.state, disconnectPosition);
+	setPromptText(msg, null);
+	state.agents.splice(disconnectPosition, 1);
+	setTimeout(disconnectAgent, 1000);
 }

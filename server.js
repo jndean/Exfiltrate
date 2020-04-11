@@ -36,26 +36,28 @@ var agent_types = [
     '2': 0, '3': 0, '4': 0, '!3': 2, '!4': 1}} 
 ];
 
-var agent_names = ["Lev.bot", "Mr Anderson", "ChuckNorris", "Obama", "C00k1e", "J0s3f"];
+
+var rounds = [
+  {names: ["Lev.bot", "Mr Anderson", "ChuckNorris", "Obama", "C00k1e", "J0s3f", "Kat.bot", "Mr Bean", "Ne0", "Jackie4Chan", "MJ"],
+  title: 'r/hacking',
+  tagline: ''}
+];
 
 
 var socket_to_name = {};
 var name_to_pid = {};
 var players = [];
 
-var round = 0;
+var round_num = 0;
 var phase = "lobby";
-var secrets = {"4": 1, "3": 2, "2": 0, "!4": 0, "!3": 0};
-var firewall = ["on", "on", "on"]; // Types: "on", "off", "change"
+var secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0};
+var firewall = ["on", "on", "on"];
 var firewallsDown = 0;
-var bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
+var bag = [];
 var agents = [];
 var choices = [];
 var currentHacker = 0;
 var commonText = '';
-
-newAgent();
-newAgent();
 
 
 
@@ -160,24 +162,58 @@ function startGame() {
   for (var i=0; i<players.length; i++) {
     players[i].money = 0;
   }
-  startRound(0);
+  startRound();
 }
 
 
-function startRound(round_num) {
-  round = round_num;
+function startRound() {
 
-  bag = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
+  bag = [];
+  var round = rounds[round_num];
+  shuffle(round.names);
+  var types = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
+  while (types.length > 0) {
+    var agent_type = types.pop();
+    var template = agent_types[agent_type];
+    var pHack = template.pHack + (0.06 * Math.random()) - 0.03;
+    var pCounter = template.pCounter + (0.06 * Math.random()) - 0.03;
+    var name = '<font color=#666666>Shad0Broker</font>';
+    if (agent_type != 3) name = round.names.pop();
+    bag.push({
+      level: template.level,
+      name: name,
+      pHack: pHack,
+      pCounter: pCounter,
+      secrets: template.secrets,
+      state: 'connecting'
+    });
+  }
+
   firewallsDown = 0;
   firewall = ["on", "on", "on"];
 
-  newAgent();
-  newAgent();
+  startConnectingAgents();
+}
+
+// ----------------- Draw new agents ---------------- //
+
+
+function startConnectingAgents() {
+  phase = 'connectingAgents';
+  setTimeout(() => connectNewAgents(2), 1000)
   broadcastState();
-  setTimeout(function() {
-    for (var i=0; i<agents.length; i++) agents[i].state = "";
-    startChoosingAction();
-  }, 2000);
+}
+
+function connectNewAgents(num) {
+  if (bag.length == 0) return;
+  var agent = bag.pop();
+  agents.push(agent);
+  broadcastState();
+  if (num > 1) {
+    setTimeout(() => connectNewAgents(num-1), 1000);
+  } else {
+    setTimeout(startChoosingAction, 3000);
+  }
 }
 
 // ----------------- Choosing actions ---------------- //
@@ -267,8 +303,9 @@ function finaliseSecretChoices() {
   }
   if (players.every(p => p.state == 'offline')) {
     finaliseRound();
+  } else {
+    startHacking();
   }
-  startHacking();
 }
 
 // ---------------------- Hacking ---------------------- //
@@ -339,39 +376,26 @@ function finishResults() {
       }
     } else if (agent.state == 'hacked') {
       for (s in agent.secrets) {
-        state.secrets[s] += agent.secrets[s];
+        secrets[s] += agent.secrets[s];
       }
     }
   }
   agents = agents.filter(a => a.state == '');
   broadcastState();
+  finishTurn();
 }
+
 
 // -------------------------------------------------- //
 
-
-function newAgent() {
+function finishTurn() {
+  phase = 'finishTurn';
   if (bag.length == 0) {
-    console.log("Drawing from empty bag");
-    return;
+    // TODO: handle unlikly win condition //
   }
-  var agent_type = bag.pop();
-  var template = agent_types[agent_type];
-  var pHack = template.pHack + (0.06 * Math.random()) - 0.03;
-  var pCounter = template.pCounter + (0.06 * Math.random()) - 0.03;
-  var name = '<font color=#666666>Shad0Broker</font>';
-  if (agent_type != 3) name = agent_names.pop();
-  agent_names = shuffle(agent_names);
-  var agent = {
-    level: template.level,
-    name: name,
-    pHack: pHack,
-    pCounter: pCounter,
-    secrets: template.secrets,
-    state: 'connecting'
-  };
-  agents.push(agent);
+  setTimeout(startConnectingAgents, 2000);
 }
+
 
 
 // -------------------------------------------- //
@@ -478,4 +502,17 @@ function randomHackingText() {
           rng(hackingLocation) + '.',
           rng(hackingComment),
          ].join(' ');
+}
+
+function agentJoinText(names) {
+  var message;
+  if (names.length == 1) {
+    message =  names[0] + ' has joined the fight';
+  } else {
+    message = names.join(' and ') + ' have joined the fight';
+  }
+  if (bag.length == 0) {
+    message += '\n> There are no opponents left on the network'
+  }
+  return message;
 }

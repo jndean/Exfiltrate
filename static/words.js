@@ -4,7 +4,7 @@ var lobby_message = "> Connecting to www.dark.net/exfil.EXE\n> pr0xy: blitting r
 
 
 function othersDisconnecting(otherNames) {
-	var message = '> ' + otherNames.join(' and ');
+	var message = otherNames.join(' and ');
 	message += ' disconnected. '
 	if (otherNames.length > 1) {
 		message += 'What a bunch of ' + state.commonText + 's.';
@@ -16,7 +16,7 @@ function othersDisconnecting(otherNames) {
 
 
 function meDisconnecting(otherNames, numSecrets) {
-	var message = '> You';
+	var message = 'You';
 	for (var i = 1; i < otherNames.length; i++) 
 		message += ', ' + otherNames[i];
 	if (otherNames.length > 0) 
@@ -29,12 +29,24 @@ function meDisconnecting(otherNames, numSecrets) {
 	return message;
 }
 
+function agentHacked(name, secret) {
+	return name + ' was hacked for ' + secret;
+}
+
+function agentCounterHacked(name) {
+	return name + ' hacked your firewall';
+}
+
+function agentRemains(name) {
+	return name + ' remains connected';
+}
+
 function noDisconnects() {
-	return "> Nobody disconnected. In for a bit, in for a byte.";
+	return "Nobody disconnected. In for a bit, in for a byte.";
 }
 
 function hackerPrompt() {
-	var message = '> Hack the enemy agents and steal their secrets<br>> Hint: ';
+	var message = 'Hack the enemy agents and steal their secrets<br>> Hint: ';
 	message += state.commonText.split('.')[0];
 	message += '<br>><br>> Progress: <br>';
 	return message;

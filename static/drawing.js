@@ -35,7 +35,7 @@ function drawBoard() {
   	width = 7;
   }
   rows.push('+' + '='.repeat(width) + '+');
-  rows.push('| <font color=\"gold\">' + secrets + '</font> |');
+  rows.push('| ' + secrets + ' |');
   rows.push('+' + '='.repeat(width) + '+');
 
 

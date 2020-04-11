@@ -8,7 +8,7 @@ document.body.onkeydown = function () {
 	document.body.onkeydown = null;
 	animate_typing(
 		linesBox, 
-		lobby_message,
+		'', //lobby_message,
 		typing_delay,
 		() => placeInputBox(nameInput, validNameCheck, joinWithName)
 	);
