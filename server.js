@@ -74,7 +74,7 @@ var players = [];
 
 var round_num = 0;
 var phase = "lobby";
-var secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0};
+var secrets = emptySecrets();
 var firewall = ["on", "on", "on"];
 var firewallsDown = 0;
 var bag = [];
@@ -82,7 +82,6 @@ var agents = [];
 var choices = [];
 var currentHacker = -1;
 var commonText = '';
-
 
 
 // ------------------ Communication with clients ------------------ //
@@ -109,7 +108,7 @@ io.on('connection', function(socket) {
         money: 0,
         connected: true,
         state: '',
-        secrets: [],
+        secrets: emptySecrets(),
       };
     } else {
       pid = name_to_pid[name];
@@ -189,13 +188,13 @@ function setStateOfAllOnlinePlayers(state) {
 function nextRound() {
   round_num += 1;
 
-  firewallsDown = 0;
-  firewall = ["on", "on", "on"];
+  firewallsDown = 2;
+  firewall = ["off", "off", "on"];
   for (var i=0; i<players.length; ++i) {
     players[i].state = '';
   }
   agents = [];
-  secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0};
+  secrets = emptySecrets();
 
   // Initialise 'bag' of enemy dice //
   bag = [];
@@ -205,8 +204,8 @@ function nextRound() {
   while (types.length > 1) {
     var agent_type = types.pop();
     var template = agent_types[agent_type];
-    var pHack = template.pHack + (0.06 * Math.random()) - 0.03;
-    var pCounter = template.pCounter + (0.06 * Math.random()) - 0.03;
+    var pHack = template.pHack + (0.05 * Math.random()) - 0.025;
+    var pCounter = template.pCounter + (0.05 * Math.random()) - 0.025;
     var name = '<font color=#666666>Shad0Broker</font>';
     if (agent_type != 3) name = round.names.pop();
     bag.push({
@@ -220,7 +219,6 @@ function nextRound() {
     });
   }
 
-  console.log('remaining die', types);
   // The final enemy die goes straight to the secrets server //
   var lowestValueMap = {0: '2', 1: '3', 2: '4', 3: '!3'};
   secrets[lowestValueMap[types.pop()]] = 1;
@@ -390,7 +388,7 @@ function receiveFinishHacking(pid) {
       agent.state = 'counter';
       if (firewallsDown < 3) firewall[firewallsDown] = "change";
       firewallsDown += 1;
-      agent.secrets = [];
+      agent.secrets = emptySecrets();
       agent.message = agentCounterHackText(agent.name);
 
     } else if (roll < agent.pCounter + agent.pHack) {
@@ -415,7 +413,7 @@ function randomSecret(secrets) {
       pool.push(s);
     }
   }
-  var ret = {'4':0, '3':0, '2':0, '!4':0, '3!':0};
+  var ret = {'4':0, '3':0, '2':0, '!4':0, '!3':0};
   ret[pool[Math.floor(pool.length * Math.random())]] = 1;
   return ret;
 }
@@ -445,13 +443,14 @@ function finishResults() {
 // -------------------------------------------------- //
 
 function finishTurn() {
-  phase = 'finishTurn';
   if (bag.length == 0) {
     // TODO: handle unlikly win condition //
+  } else if (firewallsDown >= 3) {
+    setTimeout(finishRound, 2000);
+  } else {
+    setTimeout(startConnectingAgents, 2000);
   }
-  setTimeout(startConnectingAgents, 2000);
 }
-
 
 
 // -------------------------------------------- //
@@ -473,6 +472,7 @@ function finishRound() {
       stealer = p, stealAmt = 4;
     }
   }
+  secrets = emptySecrets();
   commonText = roundOverText();
   broadcastState();
 
@@ -480,7 +480,7 @@ function finishRound() {
     setTimeout(() => moneySteal(stealer, stealAmt), 4000);
   }
   else if (round_num != 6) {
-    setTimeout(nextRound, 4000);
+    setTimeout(nextRound, 5000);
   }
   //else                    setTimeout(finishGame, 5000);
 }
@@ -520,7 +520,7 @@ function moneySteal(stealer, amt) {
     victims.map(p => p.name),
     amt
   );
-  stealer.secrets = [];
+  stealer.secrets = emptySecrets();
   broadcastState();
 
   if (round_num != 6) {
@@ -532,6 +532,10 @@ function moneySteal(stealer, amt) {
 
 
 // ------------------------- Utilities ----------------------------- //
+
+function emptySecrets() {
+  return {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0};
+}
 
 function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {

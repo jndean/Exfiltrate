@@ -120,6 +120,7 @@ var roundSplashRound = document.getElementById("roundSplashRound");
 roundSplash.style.font = '30px Inconsolata, monospace';
 
 function startPhase_newRound() {
+	setPromptText("");
 	roundSplash.style.visibility = 'visible';
 	board.style.visibility = 'hidden';
 	animate_typing(
@@ -141,6 +142,7 @@ function startPhase_newRound() {
 }
 
 function finishRoundSplash() {
+	printToLog("Round " + state.round.number + ' begins');
 	roundSplashTitle.innerHTML = '';
 	roundSplashRound.innerHTML = '';
 	roundSplash.style.visibility = 'hidden';

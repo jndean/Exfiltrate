@@ -42,11 +42,11 @@ function drawBoard() {
 	  secrets = '<font color=\"grey\">EMPTY</font>';
   	width = 7;
   }
-  if (state.firewall[2] == 'off' && offBlink) {
+  if (state.firewall[2] == 'off' && (offBlink || phase == 'roundEnd')) {
     rows.push('<font color=\"#ee2211\">+' + '='.repeat(width) + '+');
     rows.push('| ' + secrets + ' |');
     rows.push('+' + '='.repeat(width) + '+</font>');
-  }else {
+  } else {
     rows.push('+' + '='.repeat(width) + '+');
     rows.push('| ' + secrets + ' |');
     rows.push('+' + '='.repeat(width) + '+');
