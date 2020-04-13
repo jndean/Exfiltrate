@@ -27,20 +27,44 @@ server.listen(port, function() {
 // Game setup //
 var agent_types = [
   {level: 1, pCounter: 1/6, pHack: 4/6, secrets: { // Bronze die
-    '2': 1, '3': 1, '4': 0, '!3': 0, '!4': 0}}, 
+    '2': 2, '3': 2, '4': 0, '!3': 0, '!4': 0}}, 
   {level: 2, pCounter: 2/6, pHack: 3/6, secrets: { // Silver die
     '2': 0, '3': 2, '4': 1, '!3': 0, '!4': 0}}, 
   {level: 3, pCounter: 2/6, pHack: 2/6, secrets: { // Gold die
-    '2': 0, '3': 0, '4': 1, '!3': 0, '!4': 0}}, 
+    '2': 0, '3': 0, '4': 2, '!3': 0, '!4': 0}}, 
   {level: 2, pCounter: 2/6, pHack: 3/6, secrets: { // Red die
     '2': 0, '3': 0, '4': 0, '!3': 2, '!4': 1}} 
 ];
 
 
 var rounds = [
-  {names: ["Lev.bot", "Mr Anderson", "ChuckNorris", "Obama", "C00k1e", "J0s3f", "Kat.bot", "Mr Bean", "Ne0", "Jackie4Chan", "MJ"],
-  title: 'r/hacking',
-  tagline: ''}
+  {
+    title: '' // Fake round for lobby //
+  },
+  {
+    title: 'Nebuchadnezzar',
+    names : ['Apoc', 'Cypher', 'Dozer', 'Gh0st', 'Morph3us', 'Mouse', 'Ne0', 'Switch', 'Tank', 'Tr1n1ty', 'M. Smith']
+  },
+  {
+    title: '',
+    names: ["-", "-", "-", "Komodo", "Anon", "DonCheadle", "Jackie4Chan", "MJ", "Mr Anderson", "Shroud", "C00k1e"]
+  },
+  {
+    title: 'Annonymous',
+    names : ["-", "-", "-", "-", "-", "-", "-", "Lev.bot", "Mr Bean", "Mr.Universe", "8ball"]
+  },
+  {
+    title: 'NSA',
+    names : ["-", "-", "-", "-", "-", "Obama", "Number 1", "Agent X", "Lex Murphy", "DennisNedry", "Theo"]
+  },
+  {
+    title: 'GCHQ',
+    names : ['Michael', 'Matt', 'John', 'Xena', 'Emily', 'Nick', 'Eleanor', 'Phil', 'Jamie', 'Graham', 'Sarah', 'Hayley']
+  },
+  {
+    title: 'Introspection',
+    names : []
+  },
 ];
 
 
@@ -56,7 +80,7 @@ var firewallsDown = 0;
 var bag = [];
 var agents = [];
 var choices = [];
-var currentHacker = 0;
+var currentHacker = -1;
 var commonText = '';
 
 
@@ -113,7 +137,7 @@ io.on('connection', function(socket) {
       console.log('Incorrect number of players:', num_players);
       return;
     }
-    startGame();
+    nextRound();
   });
 
   socket.on(
@@ -139,7 +163,11 @@ function broadcastState() {
     firewall: firewall,
     agents: agents, 
     commonText: commonText,
-    currentHacker: currentHacker
+    currentHacker: currentHacker,
+    round: {
+      number: round_num,
+      title: rounds[round_num].title
+    }
   });
 }
 
@@ -158,21 +186,23 @@ function setStateOfAllOnlinePlayers(state) {
 
 // ------------------ Init game, round ------------------ //
 
-function startGame() {
-  for (var i=0; i<players.length; i++) {
-    players[i].money = 0;
+function nextRound() {
+  round_num += 1;
+
+  firewallsDown = 0;
+  firewall = ["on", "on", "on"];
+  for (var i=0; i<players.length; ++i) {
+    players[i].state = '';
   }
-  startRound();
-}
+  agents = [];
+  secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0};
 
-
-function startRound() {
-
+  // Initialise 'bag' of enemy dice //
   bag = [];
   var round = rounds[round_num];
   shuffle(round.names);
   var types = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
-  while (types.length > 0) {
+  while (types.length > 1) {
     var agent_type = types.pop();
     var template = agent_types[agent_type];
     var pHack = template.pHack + (0.06 * Math.random()) - 0.03;
@@ -185,21 +215,33 @@ function startRound() {
       pHack: pHack,
       pCounter: pCounter,
       secrets: template.secrets,
-      state: 'connecting'
+      state: 'connecting',
+      message: 'NULL'
     });
   }
 
-  firewallsDown = 0;
-  firewall = ["on", "on", "on"];
+  console.log('remaining die', types);
+  // The final enemy die goes straight to the secrets server //
+  var lowestValueMap = {0: '2', 1: '3', 2: '4', 3: '!3'};
+  secrets[lowestValueMap[types.pop()]] = 1;
 
-  startConnectingAgents();
+  roundSplashScreen();
 }
+
+function roundSplashScreen() {
+  phase = 'newRound';
+  broadcastState();
+  setTimeout(startConnectingAgents, 5000);
+}
+
+
 
 // ----------------- Draw new agents ---------------- //
 
 
 function startConnectingAgents() {
   phase = 'connectingAgents';
+  commonText = connectingAgentsText();
   setTimeout(() => connectNewAgents(2), 1000)
   broadcastState();
 }
@@ -256,9 +298,7 @@ function startDisconnect() {
 
     if (numDisconnects == 0) {
       // Move onto hacking with delay to show everybody is connected? //
-      phase = 'noDisconnects';
-      broadcastState();
-      setTimeout(startHacking, 2000);
+      finishDisconnects();
     } else {
       // Wait for secret negotiation messages //
       phase = 'disconnect';
@@ -282,7 +322,7 @@ function receiveSecretsChoice(pid, choice) {
   }
   for (s in choice) if (choice[s] * num > secrets[s]) return;
 
-  finaliseSecretChoices();
+  setTimeout(finishDisconnects, 500);
 }
 
 function sameChoice(a, b) {
@@ -291,20 +331,36 @@ function sameChoice(a, b) {
   return true;
 }
 
-function finaliseSecretChoices() {
+function emptySecrets(secrets) {
+  for (s in secrets) {
+    if (secrets[s] != 0) return false;
+  }
+  return true;
+}
+
+function finishDisconnects() {
+  phase = 'finishDisconnects';
+  var names = [];
+  var secrets_taken = null;
   for (var i=0; i<players.length; ++i) {
     var p = players[i];
     if(p.state == 'disconnecting') {
+      names.push(p.name);
+      secrets_taken = p.secrets;
       p.state = 'offline';
       for (s in p.secrets) {
         secrets[s] -= p.secrets[s];
       }
+      if (emptySecrets(p.secrets)) p.money += 1;
     }
   }
+  commonText = playersTakeSecretsText(names, secrets_taken);
+  broadcastState();
+
   if (players.every(p => p.state == 'offline')) {
-    finaliseRound();
+    setTimeout(finishRound, 3000);
   } else {
-    startHacking();
+    setTimeout(startHacking, 3000);
   }
 }
 
@@ -312,12 +368,9 @@ function finaliseSecretChoices() {
 
 function startHacking() {
   phase = 'hacking';
-
-  if (players[currentHacker].state == 'offline') {
-    for (var i=0; i<players.length; ++i) {
-      currentHacker += 1;
-      if (players[currentHacker].state != 'offline') break;
-    }
+  for (var i = 0; i < players.length; ++i) {
+    currentHacker = (currentHacker + 1) % players.length;
+    if (players[currentHacker].state != 'offline') break;
   }
   commonText = randomHackingText();
   broadcastState();
@@ -338,18 +391,21 @@ function receiveFinishHacking(pid) {
       if (firewallsDown < 3) firewall[firewallsDown] = "change";
       firewallsDown += 1;
       agent.secrets = [];
+      agent.message = agentCounterHackText(agent.name);
 
     } else if (roll < agent.pCounter + agent.pHack) {
       agent.state = 'hacked';
       agent.secrets = randomSecret(agent.secrets);
+      agent.message = agentHackText(agent.name, agent.secrets);
     
     } else {
       agent.state = '';
       numDisconnects -= 1;
+      agent.message = agentRemainText(agent.name);
     }
   }
   broadcastState();
-  setTimeout(finishResults, 3500 + 1000 * numDisconnects);
+  setTimeout(finishResults, 3000 + 1000 * numDisconnects);
 }
 
 function randomSecret(secrets) {
@@ -400,11 +456,82 @@ function finishTurn() {
 
 // -------------------------------------------- //
 
-function finaliseRound() {
+function finishRound() {
+  phase = 'roundEnd';
 
-  console.log('End of round');
+  var stealer = null;
+  var stealAmt = null;
+  for (var i=0; i<players.length; ++i) {
+    var p = players[i];
+    for (var s = 2; s <=4; ++s) {
+      p.money += s * p.secrets[String(s)];
+      p.secrets[String(s)] = 0;
+    }
+    if (p.secrets['!3']) {
+      stealer = p, stealAmt = 3;
+    } else if (p.secrets['!4']) {
+      stealer = p, stealAmt = 4;
+    }
+  }
+  commonText = roundOverText();
+  broadcastState();
+
+  if (stealer != null) {
+    setTimeout(() => moneySteal(stealer, stealAmt), 4000);
+  }
+  else if (round_num != 6) {
+    setTimeout(nextRound, 4000);
+  }
+  //else                    setTimeout(finishGame, 5000);
 }
 
+
+function moneySteal(stealer, amt) {
+  phase = 'moneySteal';
+  var victims = [];
+  var max = -1;
+  for (var i=0; i<players.length; ++i) {
+    var p = players[i];
+    if (p.money > max) {
+      max = p.money;
+      victims = [p];
+    } else if (p.money == max) {
+      victims.push(p);
+    }
+  }
+
+  shuffle(victims);
+  amt = Math.min(amt, victims.length * max);
+  var split = Math.floor(amt / victims.length);
+  var remainder = amt - split * victims.length;
+  for (var i = 0; i < victims.length; ++i) {
+    if (remainder > 0) {
+      remainder -= 1;
+      victims[i].money -= split + 1;
+      stealer.money += split + 1;  
+    } else {
+      victims[i].money -= split;
+      stealer.money += split;
+    }
+  }
+
+  commonText = moneyStealText(
+    stealer.name,
+    victims.map(p => p.name),
+    amt
+  );
+  stealer.secrets = [];
+  broadcastState();
+
+  if (round_num != 6) {
+    setTimeout(nextRound, 4000);
+  } else {
+    setTimeout(finishGame, 5000);
+  }
+}
+
+
+// ------------------------- Utilities ----------------------------- //
 
 function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
@@ -513,6 +640,80 @@ function agentJoinText(names) {
   }
   if (bag.length == 0) {
     message += '\n> There are no opponents left on the network'
+  }
+  return message;
+}
+
+function agentCounterHackText(name) {
+  return name + ' hacked your firewall';
+}
+
+function agentHackText(name, secrets) {
+  return name + ' was hacked for ' + drawSecrets(secrets);
+}
+
+function drawSecrets(secrets) {
+  var out = [];
+  for (s in secrets) {
+    for (var i=0; i<secrets[s]; ++i) {
+      out.push(s + 'K');
+    }
+  }
+  return out.join(' ');
+}
+
+function agentRemainText(name) {
+  return name + ' remains connected';
+}
+
+function playersTakeSecretsText(names, secrets) {
+  if (names.length == 0) {
+    return 'Nobody disconnected. In for a bit, in for a byte';
+  }
+
+  var message;
+  var each = 'each ';
+  if (names.length == 1) {
+    message = names[0] + ' takes ';
+    each = '';
+  } else {
+    message = names.slice(1).join(', ') + ' and ' + names[0] + ' take ';
+  }
+  if (emptySecrets(secrets)) {
+    message += 'no secrets, just 1K ' + each + 'from the swear jar';
+  } else {
+    message += drawSecrets(secrets) + ' ' + each;
+  }
+  return message;
+}
+
+function roundOverText() {
+  var message;
+  if (firewallsDown > 2) {
+    message = rounds[round_num].title + ' has compromised your server';
+  } else {
+    message = 'Everybody has disconnected';
+  }
+  return message + ". The round is over";
+}
+
+function connectingAgentsText() {
+  if (bag.length == 12) {
+    return "Enemy agents are connecting to the network";
+  }
+  return "More agents are connecting...";
+}
+
+function moneyStealText(theifName, victimNames, amt) {
+  if (victimNames.length == 0) {
+    return "Nobody has any hush money for" + theifName;
+  }
+  var message;
+  if (victimNames.length > 1) {
+    message = victimNames.slice(1).join(', ') + ' and ' + victimNames[0];
+    message += ' pay ' + theifName + ' ' + amt + 'K to keep their secret';
+  } else {
+    message = victimNames[0] + ' pays ' + theifName + ' ' + amt + 'K to keep their secret';
   }
   return message;
 }

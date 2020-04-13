@@ -1,7 +1,7 @@
 var socket = io();
 
 // Params! //
-var typing_delay = 1;
+var typing_delay = 10;
 
 
 // State! //
@@ -84,6 +84,7 @@ function placeInputBox(location, validInput, action) {
 		if (e.keyCode == 13 && validInput(inputField.value)) {
 			var value = inputField.value;
 			inputField.value = "";
+			drawInputDisplay();
 			action(value);
 		}
 	};

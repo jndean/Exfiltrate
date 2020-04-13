@@ -84,6 +84,15 @@ pre {
 
 /* ------------------------ Board ---------------------------- */
 
+#roundSplash {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);  
+}
+
 #board {
   margin: 15px 0 0 0;
   position: absolute;
@@ -99,6 +108,10 @@ pre {
   text-align: left;
 }
 
+#promptBox {
+  height: 40px;
+}
+
 
 /* ------------------------ Hacking ---------------------------- */
 
@@ -107,6 +120,7 @@ pre {
   position: absolute;
   top: 0%;
   left: 50%;
+  opacity: 0.5;
   -ms-transform: translate(-50%, 0%);
   transform: translate(-50%, 0%);
   width: 1200px;

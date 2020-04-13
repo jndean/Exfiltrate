@@ -23,7 +23,7 @@ function showHacking() {
 	hackingPrompt.innerHTML = hackerPrompt();
 	hackingExfiltrate.innerHTML = "";
 	hacking.style.visibility = 'visible';
-	board.style.visibility = 'hidden';
+	//board.style.visibility = 'hidden';
 	stepLHS(0);
 	stepRHS(0);
 	drawProgressBar();
@@ -84,7 +84,7 @@ function stepLHS() {
 
 function stepRHS() {
 	var n = Math.ceil(Math.random() * hackingProgress * 75);
-	var lineHeight = Math.floor(0.5 + hackingTopRight.offsetHeight / 18);
+	var lineHeight = Math.floor(0.2 + hackingTopRight.offsetHeight / 18);
 	RHScontent += RHScode.slice(RHSpos, RHSpos + n);
 	RHSpos = (RHSpos + n) % RHScode.length;
 

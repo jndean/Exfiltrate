@@ -12,6 +12,14 @@ function drawBoard() {
 
   var rows = [];
 
+  var round = state.round;
+  if (round.number == 0) {
+    rows.push('LOBBY');    
+  } else {
+    rows.push('ROUND ' + round.number + ': ' + round.title);
+  }
+  rows.push('\n');
+
   rows = rows.concat(drawAgents());
 
   // Firewall //
@@ -34,9 +42,15 @@ function drawBoard() {
 	  secrets = '<font color=\"grey\">EMPTY</font>';
   	width = 7;
   }
-  rows.push('+' + '='.repeat(width) + '+');
-  rows.push('| ' + secrets + ' |');
-  rows.push('+' + '='.repeat(width) + '+');
+  if (state.firewall[2] == 'off' && offBlink) {
+    rows.push('<font color=\"#ee2211\">+' + '='.repeat(width) + '+');
+    rows.push('| ' + secrets + ' |');
+    rows.push('+' + '='.repeat(width) + '+</font>');
+  }else {
+    rows.push('+' + '='.repeat(width) + '+');
+    rows.push('| ' + secrets + ' |');
+    rows.push('+' + '='.repeat(width) + '+');
+  }
 
 
   // Pipes //
@@ -63,14 +77,14 @@ function drawAgents() {
           if (offBlink) {
             agent_rows[0].push(red('+-------------------+'));
             agent_rows[1].push(red('| ' + padText(agent.name + ' ;)', width-4) + ' |'));
-            agent_rows[2].push(red('| [x] PWNED YOU [x] |'));
+            agent_rows[2].push(red('|  [x] HACKED YOU   |'));
             agent_rows[3].push(red('+---------X---------+'));
             pipes.push(' ');
             connectors.push('-');
           } else {
             agent_rows[0].push(red('+-------------------+'));
             agent_rows[1].push(red('| ' + padText(agent.name + ' :)', width-4) + ' |'));
-            agent_rows[2].push(red('|     Pwned you     |'));
+            agent_rows[2].push(red('|  [+] Hacked you   |'));
             agent_rows[3].push(red('+---------') + '+' + red('---------+'));
             pipes.push('|');
             connectors.push('+');
@@ -81,7 +95,7 @@ function drawAgents() {
           if(offBlink) {
             agent_rows[0].push('+-------------------+');
             agent_rows[1].push('| ' + padText(agent.name + ' :O', width-4) + ' |');
-            var ln = '|  HACKED FOR <b><font color=\"#FFD700\">';
+            var ln = '|  GOT HACKED <b><font color=\"#FFD700\">';
             ln += padText('['+drawSecrets(agent.secrets)+']', 5) + '</font></b> |';
             agent_rows[2].push(ln);
             agent_rows[3].push('+---------' + red('X') + '---------+');
@@ -90,7 +104,7 @@ function drawAgents() {
           } else {
             agent_rows[0].push('+-------------------+');
             agent_rows[1].push('| ' + padText(agent.name + ' :(', width-4) + ' |');
-            agent_rows[2].push('|  Hacked for  ' + padText(drawSecrets(agent.secrets), 3) + '  |');
+            agent_rows[2].push('|  Got Hacked  ' + padText(drawSecrets(agent.secrets), 3) + '  |');
             agent_rows[3].push('+---------+---------+');
             pipes.push('|');
             connectors.push('+');
@@ -105,9 +119,9 @@ function drawAgents() {
         ln += ' [' + red(prob + '%') + '] |';
         agent_rows[1].push(ln);
    
-        ln = '| ' + padText(drawSecrets(agent.secrets), 12);
+        ln = '| ' + padText(drawSecrets(agent.secrets), 11);
         prob = Math.floor(agent.pHack * 100);
-        ln += '[<font color=\"#33cc33\">' + prob + '%</font>] |';
+        ln += ' [<font color=\"#33cc33\">' + prob + '%</font>] |';
         agent_rows[2].push(ln);
    
 
@@ -123,9 +137,14 @@ function drawAgents() {
     }
   
     pipes = pipes.join(' '.repeat(width+2));
-    var bar = connectors.join('-'.repeat(width+2));
-    var mid = Math.floor(bar.length / 2);
-    bar = bar.slice(0, mid) + '+' + bar.slice(mid+1);
+    if (connectors.length > 0) {
+      var bar = connectors.join('-'.repeat(width+2));
+      var mid = Math.floor(bar.length / 2);
+      bar = bar.slice(0, mid) + '+' + bar.slice(mid+1);
+    } else {
+      if (offBlink) bar = red('+');
+      else          bar = red('×');
+    }
     return agent_rows.map(row => row.join('   '))
                      .concat([pipes, bar]);
 }
@@ -154,7 +173,7 @@ function drawPlayers() {
 		};
 
 		var name = player.name + " ".repeat(10-player.name.length);
-		var money = "$" + player.money.toString(10);
+		var money = player.money.toString(10) + 'K';
 		money = " ".repeat(3 - money.length) + money;
 		rows[1].push("| " + name + money + " |");
 
@@ -179,12 +198,11 @@ function drawPlayers() {
 
 function drawSecrets(secrets) {
   var out = [];
-  for (var i = 0; i < secrets['4']; i++) out.push('4K');
-  for (var i = 0; i < secrets['3']; i++) out.push('3K');
-  for (var i = 0; i < secrets['2']; i++) out.push('2K');
-  for (var i = 0; i < secrets['!4']; i++) out.push('!4K');
-  for (var i = 0; i < secrets['!3']; i++) out.push('!3K');
-  for (var i = 0; i < secrets['!2']; i++) out.push('!2K');
+  for (s in secrets) {
+    for (var i=0; i<secrets[s]; ++i) {
+      out.push(s + 'K');
+    }
+  }
   return out.join(' ');
 }
 

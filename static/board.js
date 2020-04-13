@@ -33,11 +33,15 @@ function updateState(new_state) {
 
   	if (!phaseChange) return;
 
+  	lastChoice = choiceOutput.innerHTML;
   	choiceOutput.innerHTML = "";
 	removeInputBox();
 	switch (state.phase) {
+		case 'newRound':
+			startPhase_newRound();
+			break;
 		case 'connectingAgents':
-			startPhase_connectingAgents();
+			setPromptText(state.commonText, null);
 			break;
 		case 'choosingAction':
 			startPhase_choosingAction();
@@ -45,14 +49,20 @@ function updateState(new_state) {
 		case 'disconnect':
 			startPhase_disconnect();
 			break;
-		case 'noDisconnects':
-			startPhase_noDisconnects();
+		case 'finishDisconnects':
+			setPromptText(state.commonText, null);
 			break;
 		case 'hacking':
 			startPhase_hacking();
 			break;
 		case 'results':
 			startPhase_results();
+			break;
+		case 'roundEnd':
+			setPromptText(state.commonText, null);
+			break;
+		case 'moneySteal':
+			setPromptText(state.commonText, null);
 			break;
 		default:
 			setPromptText('');
@@ -69,6 +79,7 @@ var prompt = document.getElementById("prompt");
 var log = document.getElementById("log");
 var promptText = null;
 var promptCallback = null;
+var lastChoice = "";
 
 function setPromptText(text, callback) {
 	if (promptText != null) {  // Prinitng in progress //
@@ -78,7 +89,7 @@ function setPromptText(text, callback) {
 		promptCallback = callback;
 		return;
 	}
-	printToLog(prompt.innerHTML + choiceOutput.innerHTML);
+	printToLog(prompt.innerHTML + lastChoice);
 	prompt.innerHTML = "";
 	promptText = text;
 	promptCallback = callback;
@@ -101,15 +112,49 @@ function printToLog(text) {
 }
 
 
-// ----------------------------------------------- //
+// ------------------------------------------------ //
 
-function startPhase_connectingAgents() {
-	setPromptText('More opponents are connecting...', null);
+var roundSplash = document.getElementById("roundSplash");
+var roundSplashTitle = document.getElementById("roundSplashTitle");
+var roundSplashRound = document.getElementById("roundSplashRound");
+roundSplash.style.font = '30px Inconsolata, monospace';
+
+function startPhase_newRound() {
+	roundSplash.style.visibility = 'visible';
+	board.style.visibility = 'hidden';
+	animate_typing(
+		roundSplashRound,
+		'ROUND ' + state.round.number + ': ',
+		typing_delay * 2,
+		() => setTimeout(function () {
+				animate_typing(
+					roundSplashRound,
+					state.round.title,
+					typing_delay * 2,
+					() => setTimeout(
+						finishRoundSplash,
+						3000
+					)
+				);
+		}, 1000)
+	);
+}
+
+function finishRoundSplash() {
+	roundSplashTitle.innerHTML = '';
+	roundSplashRound.innerHTML = '';
+	roundSplash.style.visibility = 'hidden';
+	board.style.visibility = 'visible';
 }
 
 // ----------------------------------------------- //
 
 function startPhase_choosingAction() {
+	if (state.players[myPid].state == 'offline') {
+		setPromptText("You are safely offline", null);
+		return;
+	}
+
 	setPromptText('Stay connected?', function () {
 		choiceOutput.innerHTML = " [y/n] ";
 		maxInputLength = 1;
@@ -158,9 +203,11 @@ function startPhase_disconnect() {
 }
 
 function parseSecrets(text, maxSecrets) {
-	var items = text.split(',');
 	var secrets = {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0, "!2": 0};
+	if (text.length == 0) return secrets;
+	var items = text.split(',');
 	var total = 0;
+	console.log(items);
 	for (var i=0; i<items.length; ++i) {
 		var item = items[i];
 		if (['k', 'K'].includes(item.slice(-1))) {
@@ -175,19 +222,16 @@ function parseSecrets(text, maxSecrets) {
 }
 
 function submitChooseSecrets(text) {
-	var secrets = parseSecrets(text);
+	var secrets = parseSecrets(text, 3);
 	if (secrets == null) return;
+	choiceOutput.innerHTML = '[' + text + ']';
 	socket.emit('chooseSecrets', secrets);
 }
 
-function startPhase_noDisconnects() {
-	setPromptText(noDisconnects(), null);
-}
 
 // ----------------------------------------------------- //
 
 function startPhase_hacking() {
-
 	if (state.currentHacker != myPid) {
 		setPromptText(
 		state.players[state.currentHacker].name + 
@@ -198,58 +242,14 @@ function startPhase_hacking() {
 			() => setTimeout(showHacking, 1000)
 		);
 	}
-
 }
 
-// ----------------------------------------------------- //
-
-
-var disconnectPosition;
 
 function startPhase_results() {
 	setPromptText('');
-	disconnectPosition = 0;
-	setTimeout(disconnectAgent, 3000);
+	for (var i = 0; i < state.agents.length; ++i) {
+		printToLog(state.agents[i].message);
+	}
 }
 
-// TODO: this should happen serverside, could be made synchronous with 
-// blinks by having a phase check before drawBoard in state update message
-function disconnectAgent() {
-	if (state.phase != 'results') return;
-	if (disconnectPosition >= state.agents.length) return;
-
-	var agent = state.agents[disconnectPosition];
-	
-	if (agent.state == 'remain') {
-		// No delay if no disconnect //
-		disconnectPosition += 1;
-		if (disconnectPosition == disconnectPosition.length) {
-			setPromptText(agentRemains(agent.name), null);
-		} else {
-			printToLog(agentRemains(agent.name));
-			disconnectAgent();
-		}
-		return;
-	}
-
-	var msg;
-	if (agent.state == 'counter') {
-		msg = agentCounterHacked(agent.name)
-		for (var j=0; j<3; ++j) {
-			if (state.firewall[j] == 'change') {
-				state.firewall[j] = 'off';
-				break;
-			}
-		}
-	} else if (agent.state == 'hacked') {
-		msg = agentHacked(agent.name, drawSecrets(agent.secrets));
-		for (s in agent.secrets) {
-			state.secrets[s] += agent.secrets[s];
-		}
-	}
-
-	console.log(msg, agent.state, disconnectPosition);
-	setPromptText(msg, null);
-	state.agents.splice(disconnectPosition, 1);
-	setTimeout(disconnectAgent, 1000);
-}
+// ----------------------------------------------- //
