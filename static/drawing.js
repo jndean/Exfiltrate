@@ -2,6 +2,7 @@
   
 var board = document.getElementById("board");
 var topology = document.getElementById("topology");
+var roundTitle = document.getElementById("roundTitle");
 
 
 function drawBoard() {
@@ -13,13 +14,8 @@ function drawBoard() {
   var rows = [];
 
   var round = state.round;
-  if (round.number == 0) {
-    rows.push('LOBBY');    
-  } else {
-    rows.push('ROUND ' + round.number + ': ' + round.title);
-  }
-  rows.push('\n');
-
+  roundTitle.innerHTML = 'ROUND ' + round.number + ': ' + round.title;
+  rows.push('\n')
   rows = rows.concat(drawAgents());
 
   // Firewall //

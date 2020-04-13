@@ -117,6 +117,7 @@ function printToLog(text) {
 var roundSplash = document.getElementById("roundSplash");
 var roundSplashTitle = document.getElementById("roundSplashTitle");
 var roundSplashRound = document.getElementById("roundSplashRound");
+var roundTitle = document.getElementById("roundTitle");
 roundSplash.style.font = '30px Inconsolata, monospace';
 
 function startPhase_newRound() {
@@ -239,10 +240,7 @@ function startPhase_hacking() {
 		state.players[state.currentHacker].name + 
 		' is trying to ' + state.commonText, null);
 	} else {
-		setPromptText(
-			"You are the hacker!",
-			() => setTimeout(showHacking, 1000)
-		);
+		setTimeout(showHacking, 1000)
 	}
 }
 

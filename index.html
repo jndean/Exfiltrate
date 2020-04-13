@@ -23,15 +23,20 @@
 
     <div id="board">
       <center>
+        <span id="roundTitle">LOBBY</span><br>
         <pre><span id="topology"></span></pre>
-        <br><br>
-        
         <br>
         <div id="cmdline">
-          <div id="promptBox">
+          <div id="cmdPromptBox">
             <span>> </span><span id="prompt"></span>
             <span id="choiceOutput"></span>
             <span id="choiceInput"></span>
+          </div>
+          <div id="hackingPromptBox">
+            <center>
+              <div id="hackingPrompt"></div>            
+              <div id="hackingProgressBar"></div>
+            </center>
           </div>
           <center>════════════════════════════════════════[LOG]════════════════════════════════════════<br></center>
           <span id="log"></span>
@@ -40,18 +45,9 @@
     </div>
 
     <div id="hacking"><div id="skewBox"><div id="flickerBox">
-      <pre id="hackingLeft">Left</pre>
+      <pre id="hackingLeft"></pre>
       <div id="hackingDivide"></div>
-      <div id="hackingRight">
-        <pre id="hackingTopRight">Top Right</pre>
-        <div id="hackingRightDivide"></div>
-        <div id="hackingBottomRight">
-          <div id="hackingPrompt"></div>
-          <br><br>
-          <div id="hackingProgressBar"></div>
-          <div id="hackingExfiltrate"></div>
-        </div>
-      </div>
+      <pre id="hackingRight"></pre>
     </div></div></div>
 
     <script src="/static/words.js"></script>

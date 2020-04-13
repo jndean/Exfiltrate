@@ -74,7 +74,7 @@ var players = [];
 
 var round_num = 0;
 var phase = "lobby";
-var secrets = emptySecrets();
+var secrets = newSecrets();
 var firewall = ["on", "on", "on"];
 var firewallsDown = 0;
 var bag = [];
@@ -108,7 +108,7 @@ io.on('connection', function(socket) {
         money: 0,
         connected: true,
         state: '',
-        secrets: emptySecrets(),
+        secrets: newSecrets(),
       };
     } else {
       pid = name_to_pid[name];
@@ -188,13 +188,13 @@ function setStateOfAllOnlinePlayers(state) {
 function nextRound() {
   round_num += 1;
 
-  firewallsDown = 2;
-  firewall = ["off", "off", "on"];
+  firewallsDown = 0;
+  firewall = ["on", "on", "on"];
   for (var i=0; i<players.length; ++i) {
     players[i].state = '';
   }
   agents = [];
-  secrets = emptySecrets();
+  secrets = newSecrets();
 
   // Initialise 'bag' of enemy dice //
   bag = [];
@@ -388,7 +388,7 @@ function receiveFinishHacking(pid) {
       agent.state = 'counter';
       if (firewallsDown < 3) firewall[firewallsDown] = "change";
       firewallsDown += 1;
-      agent.secrets = emptySecrets();
+      agent.secrets = newSecrets();
       agent.message = agentCounterHackText(agent.name);
 
     } else if (roll < agent.pCounter + agent.pHack) {
@@ -472,7 +472,7 @@ function finishRound() {
       stealer = p, stealAmt = 4;
     }
   }
-  secrets = emptySecrets();
+  secrets = newSecrets();
   commonText = roundOverText();
   broadcastState();
 
@@ -520,7 +520,7 @@ function moneySteal(stealer, amt) {
     victims.map(p => p.name),
     amt
   );
-  stealer.secrets = emptySecrets();
+  stealer.secrets = newSecrets();
   broadcastState();
 
   if (round_num != 6) {
@@ -533,7 +533,7 @@ function moneySteal(stealer, amt) {
 
 // ------------------------- Utilities ----------------------------- //
 
-function emptySecrets() {
+function newSecrets() {
   return {"4": 0, "3": 0, "2": 0, "!4": 0, "!3": 0};
 }
 
@@ -702,7 +702,7 @@ function roundOverText() {
 }
 
 function connectingAgentsText() {
-  if (bag.length == 12) {
+  if (bag.length == 11) {
     return "Enemy agents are connecting to the network";
   }
   return "More agents are connecting...";
