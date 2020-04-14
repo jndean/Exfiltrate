@@ -143,10 +143,15 @@ io.on('connection', function(socket) {
     'chooseAction',
     (choice) => receiveActionChoice(pid, choice)
   );
+
   socket.on(
     'chooseSecrets',
-    (choice) => receiveSecretsChoice(pid, choice)
+    function (choice) {
+      if (phase == 'disconnect') receiveSecretsChoice(pid, choice);
+      if (phase == 'emptyBag') receiveEmptyBagChoice(pid, choice);
+    }
   );
+
   socket.on(
     'finishHacking',
     () => receiveFinishHacking(pid)
@@ -200,7 +205,8 @@ function nextRound() {
   bag = [];
   var round = rounds[round_num];
   shuffle(round.names);
-  var types = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
+  //var types = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
+  var types = shuffle([0,1,2,1]);
   while (types.length > 1) {
     var agent_type = types.pop();
     var template = agent_types[agent_type];
@@ -245,15 +251,16 @@ function startConnectingAgents() {
 }
 
 function connectNewAgents(num) {
-  if (bag.length == 0) return;
-  var agent = bag.pop();
-  agents.push(agent);
-  broadcastState();
-  if (num > 1) {
-    setTimeout(() => connectNewAgents(num-1), 1000);
-  } else {
-    setTimeout(startChoosingAction, 3000);
+  if (bag.length > 0) {
+    var agent = bag.pop();
+    agents.push(agent);
+    broadcastState();
+    if (num > 1) {
+      setTimeout(() => connectNewAgents(num-1), 1000);
+      return;
+    }
   }
+  setTimeout(startChoosingAction, 3000);
 }
 
 // ----------------- Choosing actions ---------------- //
@@ -402,6 +409,15 @@ function receiveFinishHacking(pid) {
       agent.message = agentRemainText(agent.name);
     }
   }
+
+  if (numDisconnects == 0) {
+    commonText = nobodyWasHackedText();
+  } else if (agent.length == 1) {
+    commonText = agents[0].message;
+  } else {
+    commonText = "";
+  }
+
   broadcastState();
   setTimeout(finishResults, 3000 + 1000 * numDisconnects);
 }
@@ -443,8 +459,8 @@ function finishResults() {
 // -------------------------------------------------- //
 
 function finishTurn() {
-  if (bag.length == 0) {
-    // TODO: handle unlikly win condition //
+  if (agents.length == 0 && bag.length == 0) {
+    setTimeout(startEmptyBag, 2000);
   } else if (firewallsDown >= 3) {
     setTimeout(finishRound, 2000);
   } else {
@@ -452,8 +468,6 @@ function finishTurn() {
   }
 }
 
-
-// -------------------------------------------- //
 
 function finishRound() {
   phase = 'roundEnd';
@@ -528,6 +542,57 @@ function moneySteal(stealer, amt) {
   } else {
     setTimeout(finishGame, 5000);
   }
+}
+
+// ------------------------- Empty Bag ------------------------------//
+
+function startEmptyBag() {
+  phase = 'emptyBag';
+  choices = Array(players.length).fill(null);
+  for (var i = 0; i < players.length; ++i) {
+    if (players[i].state != 'offline') {
+      players[i].state = 'disconnecting';
+    }
+  }
+  broadcastState();
+}
+
+function receiveEmptyBagChoice(pid, choice) {
+  if (phase != 'emptyBag' || players[pid].state != 'disconnecting') return;
+  choices[pid] = choice;
+  players[pid].secrets = choice;
+  broadcastState();
+
+  var num = 0;
+  for (var i=0; i<players.length; ++i) {
+    if (players[i].state != 'disconnecting') continue;
+    if (!sameChoice(choices[i], choice)) return;
+    num += 1;
+  }
+  for (s in choice) if (choice[s] * num > secrets[s]) return;
+
+  setTimeout(finishEmptyBag, 500);
+}
+
+function finishEmptyBag() {
+  phase = 'finishDisconnects';
+  var names = [];
+  var secrets_taken = null;
+  for (var i=0; i<players.length; ++i) {
+    var p = players[i];
+    if(p.state == 'disconnecting') {
+      names.push(p.name);
+      secrets_taken = p.secrets;
+      p.state = 'offline';
+      for (s in p.secrets) {
+        secrets[s] -= p.secrets[s];
+      }
+      if (emptySecrets(p.secrets)) p.money += 1;
+    }
+  }
+  commonText = playersTakeSecretsText(names, secrets_taken);
+  broadcastState();
+  setTimeout(finishRound, 3000);
 }
 
 
@@ -702,10 +767,14 @@ function roundOverText() {
 }
 
 function connectingAgentsText() {
-  if (bag.length == 11) {
-    return "Enemy agents are connecting to the network";
+  switch (bag.length) {
+    case 11:  // New round //
+      return "Enemy agents are connecting to the network";
+    case 0:  // No agents left //
+      return "";
+    default:  // Most turns //
+      return "More agents are connecting...";
   }
-  return "More agents are connecting...";
 }
 
 function moneyStealText(theifName, victimNames, amt) {
@@ -720,4 +789,8 @@ function moneyStealText(theifName, victimNames, amt) {
     message = victimNames[0] + ' pays ' + theifName + ' ' + amt + 'K to keep their secret';
   }
   return message;
+}
+
+function nobodyWasHackedText() {
+  return "The hacking was completely uneventful";
 }

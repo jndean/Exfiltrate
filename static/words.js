@@ -52,6 +52,20 @@ function hackerPrompt() {
 	return message;
 }
 
+function emptyBagOnlinePrompt() {
+    var message = "There is nobody left to defend the network. ";
+    var numOnline = state.players.map(p => p.state != 'offline').reduce((a,b) => a+b, 0);
+    if (numOnline > 1) message += "Negotiate";
+    else               message += "Choose";
+    message += " up to 3 secrets to take:";
+    return message;
+}
+
+function emptyBagOfflinePrompt() {
+    return "There is nobody left to defend the network."
+         + " Too bad you already disconnected";
+}
+
 
 var titleArt = "\
 ███████╗██╗  ██╗███████╗██╗██╗  ████████╗██████╗  █████╗ ████████╗███████╗\n\

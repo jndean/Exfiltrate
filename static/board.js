@@ -64,6 +64,9 @@ function updateState(new_state) {
 		case 'moneySteal':
 			setPromptText(state.commonText, null);
 			break;
+		case 'emptyBag':
+			startPhase_emptyBag();
+			break;
 		default:
 			setPromptText('');
 	}
@@ -210,7 +213,6 @@ function parseSecrets(text, maxSecrets) {
 	if (text.length == 0) return secrets;
 	var items = text.split(',');
 	var total = 0;
-	console.log(items);
 	for (var i=0; i<items.length; ++i) {
 		var item = items[i];
 		if (['k', 'K'].includes(item.slice(-1))) {
@@ -246,10 +248,28 @@ function startPhase_hacking() {
 
 
 function startPhase_results() {
-	setPromptText('');
-	for (var i = 0; i < state.agents.length; ++i) {
-		printToLog(state.agents[i].message);
+	setPromptText(state.commonText);
+	if (state.agents.length > 1) {
+		for (var i = 0; i < state.agents.length; ++i) {
+			printToLog(state.agents[i].message);
+		}
 	}
 }
 
 // ----------------------------------------------- //
+
+function startPhase_emptyBag() {
+	if (state.players[myPid].state == 'offline') {
+		setPromptText(emptyBagOfflinePrompt(), null);
+		return;
+	}
+
+	setPromptText(emptyBagOnlinePrompt(), function () {
+		maxInputLength = 9;
+		placeInputBox(
+			choiceInput,
+			(t) => parseSecrets(t, 3) != null,
+			submitChooseSecrets
+		);
+	});
+}
