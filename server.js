@@ -46,12 +46,8 @@ var rounds = [
     names : ['Apoc', 'Cypher', 'Dozer', 'Gh0st', 'Morph3us', 'Mouse', 'Ne0', 'Switch', 'Tank', 'Tr1n1ty', 'M. Smith']
   },
   {
-    title: '',
-    names: ["-", "-", "-", "Komodo", "Anon", "DonCheadle", "Jackie4Chan", "MJ", "Mr Anderson", "Shroud", "C00k1e"]
-  },
-  {
     title: 'Annonymous',
-    names : ["-", "-", "-", "-", "-", "-", "-", "Lev.bot", "Mr Bean", "Mr.Universe", "8ball"]
+    names: ["Morty.bot", "Snek", "Mr.Universe", "8ball", "Shr3k", "Anon", "Jackie4Chan", "MJ", "Shroud", "C00k1e", "Flynn"]
   },
   {
     title: 'NSA',
@@ -60,6 +56,10 @@ var rounds = [
   {
     title: 'GCHQ',
     names : ['Michael', 'Matt', 'John', 'Xena', 'Emily', 'Nick', 'Eleanor', 'Phil', 'Jamie', 'Graham', 'Sarah', 'Hayley']
+  },
+  {
+    title: 'CubicaTech',
+    names : ["Page2Disk", "Simon", "Russell", "Claire", "RM-star", "GoldenEye", "JCDC", "SocSec", "Valderrama", "NathanMarz", "KfC", "pun1sha256", "HiRoller", "Wotswot"]
   },
   {
     title: 'Introspection',
@@ -136,6 +136,7 @@ io.on('connection', function(socket) {
       console.log('Incorrect number of players:', num_players);
       return;
     }
+    fillInFinalRoundNames();
     nextRound();
   });
 
@@ -168,6 +169,7 @@ function broadcastState() {
     agents: agents, 
     commonText: commonText,
     currentHacker: currentHacker,
+    remainingAgents: bag.length,
     round: {
       number: round_num,
       title: rounds[round_num].title
@@ -191,7 +193,14 @@ function setStateOfAllOnlinePlayers(state) {
 // ------------------ Init game, round ------------------ //
 
 function nextRound() {
-  round_num += 1;
+  round_num += 3;
+
+  if (round_num > 6) {
+    round_num = 6; // So as not to break broadcastState
+    phase = 'gameOver';
+    broadcastState();
+    return;
+  }
 
   firewallsDown = 0;
   firewall = ["on", "on", "on"];
@@ -205,8 +214,7 @@ function nextRound() {
   bag = [];
   var round = rounds[round_num];
   shuffle(round.names);
-  //var types = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
-  var types = shuffle([0,1,2,1]);
+  var types = shuffle([0,0,0,0,1,1,1,1,2,2,2,3]);
   while (types.length > 1) {
     var agent_type = types.pop();
     var template = agent_types[agent_type];
@@ -272,6 +280,7 @@ function startChoosingAction() {
     }
     choices = Array(players.length).fill(null);
     setStateOfAllOnlinePlayers('choosingAction');
+
     broadcastState();
 }
 
@@ -492,11 +501,9 @@ function finishRound() {
 
   if (stealer != null) {
     setTimeout(() => moneySteal(stealer, stealAmt), 4000);
-  }
-  else if (round_num != 6) {
+  } else {
     setTimeout(nextRound, 5000);
   }
-  //else                    setTimeout(finishGame, 5000);
 }
 
 
@@ -537,11 +544,7 @@ function moneySteal(stealer, amt) {
   stealer.secrets = newSecrets();
   broadcastState();
 
-  if (round_num != 6) {
-    setTimeout(nextRound, 4000);
-  } else {
-    setTimeout(finishGame, 5000);
-  }
+  setTimeout(nextRound, 4000);
 }
 
 // ------------------------- Empty Bag ------------------------------//
@@ -641,15 +644,19 @@ function randomInsult() {
 }
 
 
+
 var hackingVerb = [
     'download',
     'inject',
     'bootstrap',
     'escalate',
     'spoof',
+    'upload',
     'whack',
     'side-load',
     'cross-compile',
+    'virtualise',
+    'emulate',
 ];
 var hackingNoun = [
     'a rootkit',
@@ -793,4 +800,40 @@ function moneyStealText(theifName, victimNames, amt) {
 
 function nobodyWasHackedText() {
   return "The hacking was completely uneventful";
+}
+
+function fillInFinalRoundNames() {
+  var names = players.map(p => p.name);
+  var ret = names.slice();
+  if (ret.length < 11) {
+    for (var i=0; i<names.length; ++i) {
+      ret.push(                     // Leet name //
+          names[i].toLowerCase()
+                  .replace('a', '4').replace('e', '3')
+                  .replace('i', '1').replace('o', '0')
+      );
+    }
+  }
+  if (ret.length < 11) {
+    for (var i=0; i<names.length; ++i) {
+      var name = names[i];
+      var spongeName = '';
+      for (var j=0; j<name.length; ++j) {
+        if (j%2 == 0) spongeName += name[j].toLowerCase();
+        else          spongeName += name[j].toUpperCase();
+      }
+      ret.push(spongeName);
+    }
+  }
+  if (ret.length < 11) {
+    for (var i=0; i<names.length; ++i) {
+      if (names[i].length < 9) {
+        ret.push('!' + names[i]);
+      }
+    }
+  }
+  while (ret.length < 11) {
+    ret.push(ret[Math.floor(Math.random() * ret.length)]);
+  }
+  rounds[6].names = ret;
 }

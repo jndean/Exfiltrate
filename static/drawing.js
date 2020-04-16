@@ -14,7 +14,12 @@ function drawBoard() {
   var rows = [];
 
   var round = state.round;
-  roundTitle.innerHTML = 'ROUND ' + round.number + ': ' + round.title;
+  if (round.number == 0) {
+    roundTitle.innerHTML = 'LOBBY';
+  } else {
+    roundTitle.innerHTML = 'ROUND ' + round.number + ': ';
+    roundTitle.innerHTML += round.title + ' (' + state.remainingAgents + ')';
+  }
   rows.push('\n')
   rows = rows.concat(drawAgents());
 
@@ -112,7 +117,8 @@ function drawAgents() {
    
         var ln = '| ' + padText(agent.name, 11);
         var prob = Math.floor(agent.pCounter * 100);
-        ln += ' [' + red(prob + '%') + '] |';
+        if (prob > 25) ln += ' [' + red(prob + '%') + '] |';
+        else ln += ' [<font color=\"orange\">' + prob + '%</font>] |';
         agent_rows[1].push(ln);
    
         ln = '| ' + padText(drawSecrets(agent.secrets), 11);
@@ -212,4 +218,19 @@ function centerText(text, width) {
 	text = ' '.repeat(pad) + text;
 	text += ' '.repeat(width - text.length);
 	return text;
+}
+
+
+var winGraph = document.getElementById("winGraph");
+
+function drawWinGraph() {
+  var graph = '';
+  for (var i=0; i< state.players.length; ++i) {
+    var player = state.players[i];
+    graph += '          |\n';
+    graph += ' '.repeat(9-player.name.length) + player.name;
+    graph += ' | ' + '█'.repeat(player.money + Math.floor(Math.random() * 18)) + '\n'
+    graph += '          |\n';
+  }
+  winGraph.innerHTML = graph;
 }

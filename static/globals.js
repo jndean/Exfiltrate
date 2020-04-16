@@ -23,7 +23,7 @@ var hacking = document.getElementById("hacking");
 
 // Utility functions! //
 
-function animate_typing(dest, text, delay, finish) {
+function animate_typing(dest, text, delay, finish, no_pause=false) {
 	var pause_time = 0;
 	var written_text = dest.innerHTML;
 	var typing_interval = setInterval(function() {
@@ -37,7 +37,7 @@ function animate_typing(dest, text, delay, finish) {
 			return;
 		}
 		var c = text[0];
-		if (c == '\n') pause_time = 30 + Math.random() * 70;
+		if (c == '\n' && !no_pause) pause_time = 30 + Math.random() * 70;
 		text = text.substring(1);
 		written_text += c;
 		dest.innerHTML = written_text;

@@ -26,6 +26,7 @@ function openBoard() {
 
 socket.on('state', updateState);
 function updateState(new_state) {
+
 	phaseChange = (state == undefined) || state.phase != new_state.phase;
   	state = new_state;
   	console.log("Current state", state);
@@ -66,6 +67,9 @@ function updateState(new_state) {
 			break;
 		case 'emptyBag':
 			startPhase_emptyBag();
+			break;
+		case 'gameOver':
+			startPhase_gameOver();
 			break;
 		default:
 			setPromptText('');
@@ -242,7 +246,7 @@ function startPhase_hacking() {
 		state.players[state.currentHacker].name + 
 		' is trying to ' + state.commonText, null);
 	} else {
-		setTimeout(showHacking, 1000)
+		setTimeout(startHacking, 1000)
 	}
 }
 
@@ -272,4 +276,77 @@ function startPhase_emptyBag() {
 			submitChooseSecrets
 		);
 	});
+}
+
+
+
+// ----------------------------------------------- //
+
+
+var winScreen = document.getElementById('winScreen');
+var winGraph = document.getElementById('winGraph');
+var winTitle = document.getElementById('winTitle');
+
+function startPhase_gameOver() {
+	board.style.display = 'none';
+	winScreen.style.display = 'block';
+	document.body.style.textShadow = "-2px 0px 2px rgba(255, 0, 70, 0.5), 2px 0px 2px rgba(20, 0, 190, 0.5)";
+	animate_typing(
+		winTitle,
+		'Game Over',
+		15,
+		() => setTimeout(animateScoreGraph, 2000)
+	);
+}
+
+
+function animateScoreGraph() {
+	winTitle.innerHTML = " ";
+	
+	var players = state.players.slice();
+	//for (var i=0; i<players.length; ++i) players[i].money = 8 + Math.floor(Math.random() * 10);
+	
+	players.sort((a,b) => b.money - a.money);
+	var graph = '';
+	var rows = [];
+  	for (var i=0; i<players.length; ++i) {
+    	var m = players[i].money;
+	    var row = ' '.repeat(9-players[i].name.length) + players[i].name;
+	    row += ' | ' + '█'.repeat(m*2) + ' ' + m +'K';
+	    rows.push(row);
+  	}
+  	graph += rows.join('\n          |\n');
+  	animate_typing(
+  		winGraph,
+  		graph,
+  		typing_delay,
+  		() => setTimeout(winBanner, 1000),
+  		true
+  	);
+}
+
+
+var winExfiltrate = document.getElementById("winExfiltrate");
+function winBanner() {
+	animate_typing(
+		winTitle,
+		winMessage(),
+		typing_delay
+	);
+	showHacking();
+	var hackingInterval = setInterval(function () {
+		hackingProgress += 0.003;
+		stepLHS();
+		stepRHS();
+		setEffects();
+		if (hackingProgress > 1.5) {
+			winExfiltrate.innerHTML = "<b>[EXFILTRATE]</b>";
+			document.body.onkeydown = function(e) {
+				if (e.keyCode != 13) return;
+				clearInterval(hackingInterval);
+				document.body.innerHTML = 'disconnected...';
+				document.body.style.background = 'black';
+			}
+		}
+	}, 50);
 }

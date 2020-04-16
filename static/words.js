@@ -66,6 +66,26 @@ function emptyBagOfflinePrompt() {
          + " Too bad you already disconnected";
 }
 
+function winMessage() {
+    var winners = [];
+    var max = 0;
+    for (var i=0; i<state.players.length; ++i) {
+        var p = state.players[i];
+        if (p.money > max) {
+            max = p.money;
+            winners = [p.name];
+        } else if (p.money == max) {
+            winners.push(p.name);
+        }
+    }
+
+    if (winners.length > 1) {
+        return winners.slice(1).join(', ') + ' and ' + winners[0] + ' Win!';
+    } else {
+        return winners[0] + ' Wins!';
+    }
+}
+
 
 var titleArt = "\
 ███████╗██╗  ██╗███████╗██╗██╗  ████████╗██████╗  █████╗ ████████╗███████╗\n\

@@ -5,7 +5,8 @@
     <link rel="stylesheet" type="text/css" href="/static/style.css">
   </head>
   <body>
-    <input id="inputField" type="text" autofocus>
+
+    <input autocomplete="off" id="inputField" type="text" autofocus>
     <span class="scanlines"></span>
     <span class="scanline"></span>
     
@@ -49,6 +50,15 @@
       <div id="hackingDivide"></div>
       <pre id="hackingRight"></pre>
     </div></div></div>
+
+    <div id="winScreen">
+      <center>
+        <div id="winTitle"></div><br>
+        <pre id="winGraph"></pre>
+        <div id="winExfiltrate"></div>
+      </center>
+    </div>
+
 
     <script src="/static/words.js"></script>
     <script src="/static/globals.js"></script>

@@ -14,9 +14,7 @@ cmdPromptBox.style.display = 'block';
 
 var RHScontent, RHSpos, LHScontent, LHSpos, hackingProgress;
 
-
 function showHacking() {
-
 	hackingProgress = 0;
 	LHScontent = "";
 	RHScontent = '\n'.repeat(200);
@@ -27,12 +25,17 @@ function showHacking() {
 	hackingPrompt.style.font = '17px Inconsolata, monospace';
 	cmdPromptBox.style.display = 'none';
 	hackingPrompt.innerHTML = '';
+	document.body.style.textShadow = "-2px 0px 1px rgba(255,0,80,0.53), 1px 0px 1px rgba(0,30,180,0.75)";
+}
+
+function startHacking() {
+	showHacking();
 	animate_typing(
 		hackingPrompt,
-		"Start hacking!<br>[Hint: " + state.commonText.split('.')[0] + ']',
-		1
+		"<font size=\"5\">Start hacking!</font><br>[Hint: "
+		    + state.commonText.split('.')[0] + ']',
+		10
 	);
-
 	stepLHS(0);
 	stepRHS(0);
 	drawProgressBar();
@@ -47,6 +50,7 @@ function hideHacking() {
 	skewBox.style.animation = "";
 	hackingProgressBar.style.animation = "";
 	hackingPrompt.style.animation = "";
+	document.body.style.textShadow = "";
 	hacking.style.visibility = 'hidden';
 	hackingPromptBox.style.display = 'none';
 	cmdPromptBox.style.display = 'block';
@@ -112,7 +116,7 @@ function stepRHS() {
 function setEffects() {
 
 	if (hackingProgress > 0.1) {
-		document.body.style.animation = "jitterShadow 5.03s infinite";
+		//document.body.style.animation = "jitterShadow 5.03s infinite";
 	}
 
 	var loThresh = 0.3, hiThresh = 0.8;	
@@ -133,6 +137,7 @@ function setEffects() {
 	}
 
 	if (hackingProgress > 0.6) {
+		document.body.style.textShadow = "";
 		document.body.style.animation = "jitterShadow 3.03s infinite";
 	}
 
