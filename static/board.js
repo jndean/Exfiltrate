@@ -1,6 +1,4 @@
 
-board.style.visibility = 'hidden';
-
 var myPid = null;
 
 
@@ -113,7 +111,7 @@ function printToLog(text) {
 	var t = new Date();
 	var stamp = [t.getHours(), t.getMinutes(), t.getSeconds()].join(':');
 	var lines = log.innerHTML.split('<br>');
-	while (lines.length > 8) lines.pop()
+	while (lines.length > 10) lines.pop()
 		lines.unshift('[' + stamp + '] ' + text);
 	log.innerHTML = lines.join('<br>');
 }
@@ -125,7 +123,6 @@ var roundSplash = document.getElementById("roundSplash");
 var roundSplashTitle = document.getElementById("roundSplashTitle");
 var roundSplashRound = document.getElementById("roundSplashRound");
 var roundTitle = document.getElementById("roundTitle");
-roundSplash.style.font = '30px Inconsolata, monospace';
 
 function startPhase_newRound() {
 	setPromptText("");
@@ -137,7 +134,7 @@ function startPhase_newRound() {
 		typing_delay * 2,
 		() => setTimeout(function () {
 				animate_typing(
-					roundSplashRound,
+					roundSplashTitle,
 					state.round.title,
 					typing_delay * 2,
 					() => setTimeout(

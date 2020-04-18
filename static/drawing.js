@@ -177,11 +177,20 @@ function drawPlayers() {
 		var name = player.name + " ".repeat(10-player.name.length);
 		var money = player.money.toString(10) + 'K';
 		money = " ".repeat(3 - money.length) + money;
+    if (player.money >= 18) {
+      money = '<font color=\"gold\">' + money + '</font>';
+    } else if (state.phase == 'roundEnd' && offBlink) {
+      money = '<font color=\"#44ff44\">' + money + '</font>';
+    }
 		rows[1].push("| " + name + money + " |");
 
 		rows[2].push("| >" + centerText(drawSecrets(player.secrets), 11) + "< |");	
 
-		rows[3].push("+===============+");
+    if (player.connected) {
+      rows[3].push("+===============+");  
+    } else {
+    	rows[3].push("+=========[" + grey('AFK') + "]=+");
+    }
 
 		if (player.state == 'offline') {
 			pipes[pipes.length - 1] = ' ';

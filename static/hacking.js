@@ -43,6 +43,8 @@ function startHacking() {
 }
 
 function hideHacking() {
+	hackingLeft.innerHTML = "";
+	hackingRight.innerHTML = "";
 	document.body.onkeydown = null;
 	document.body.style.animation = '';
 	document.body.style.backgroundImage = "radial-gradient(rgba(0, 75, 35, 1), black 120%)";

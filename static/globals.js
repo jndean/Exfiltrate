@@ -20,6 +20,13 @@ var lobby = document.getElementById("lobby");
 var board = document.getElementById("board");
 var hacking = document.getElementById("hacking");
 
+board.style.visibility = 'hidden';
+
+
+// bounce latency messages //
+socket.on('pong', function(ms) {
+    socket.emit('latency', ms);
+});
 
 // Utility functions! //
 
@@ -138,3 +145,5 @@ function padText(text, width, padding = ' ') {
 	) + text;
 	return text;
 }
+
+

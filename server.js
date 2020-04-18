@@ -2,7 +2,7 @@
 var express = require('express');
 var http = require('http');
 var path = require('path');
-var socketIO = require('socket.io');
+var socketIO = require('socket.io', {pingInterval: 5000});
 
 var app = express();
 var server = http.Server(app);
@@ -43,27 +43,33 @@ var rounds = [
   },
   {
     title: 'Nebuchadnezzar',
-    names : ['Apoc', 'Cypher', 'Dozer', 'Gh0st', 'Morph3us', 'Mouse', 'Ne0', 'Switch', 'Tank', 'Tr1n1ty', 'M. Smith']
+    names : ['Apoc', 'Cypher', 'Dozer', 'Gh0st', 'Morph3us', 'Mouse', 'Ne0', 'Switch', 'Tank', 'Tr1n1ty', 'M. Smith'],
+    tagline: 'Follow the white rabbit'
   },
   {
-    title: 'Annonymous',
-    names: ["Morty.bot", "Snek", "Mr.Universe", "8ball", "Shr3k", "Anon", "Jackie4Chan", "MJ", "Shroud", "C00k1e", "Flynn"]
+    title: 'Anonymous',
+    names: ["Morty.bot", "Snek", "Mr.Universe", "8ball", "Shr3k", "Q.Anon", "Jackie4Chan", "MJ", "Shroud", "C00k1e", "Flynn"],
+    tagline: 'We are Legion'
   },
   {
     title: 'NSA',
-    names : ["-", "-", "-", "-", "-", "Obama", "Number 1", "Agent X", "Lex Murphy", "DennisNedry", "Theo"]
+    names : ["Akbar", "BobParr", "[#######]", "Q", "Grevious", "Obama", "Number1", "Agent X", "Lex Murphy", "DennisNedry", "Theo"],
+    tagline: 'Defending Our Nation. Securing the Future.'
   },
   {
     title: 'GCHQ',
-    names : ['Michael', 'Matt', 'John', 'Xena', 'Emily', 'Nick', 'Eleanor', 'Phil', 'Jamie', 'Graham', 'Sarah', 'Hayley']
+    names : ['Michael', 'Matt', 'John', 'Xena', 'Emily', 'Nick', 'Eleanor', 'Phil', 'Jamie', 'Graham', 'Sarah', 'Hayley'],
+    tagline: 'The Government Code & Cypher School.'
   },
   {
     title: 'CubicaTech',
-    names : ["Page2Disk", "Simon", "Russell", "Claire", "RM-star", "GoldenEye", "JCDC", "SocSec", "Valderrama", "NathanMarz", "KfC", "pun1sha256", "HiRoller", "Wotswot"]
+    names : ["Page2Disk", "Simon", "Russell", "Claire", "RM-star", "GoldenEye", "JCDC", "SocSec", "Valderrama", "NathanMarz", "KfC", "pun1sha256", "HiRoller", "Wotswot"],
+    tagline: 'Experts in Computer Vision, not Cyber Security.'
   },
   {
     title: 'Introspection',
-    names : []
+    names : [],
+    tagline: 'But can you defeat... yourself?'
   },
 ];
 
@@ -88,7 +94,7 @@ var commonText = '';
 
 io.on('connection', function(socket) {
 
-  var pid;
+  var pid = null;
 
   socket.on('join game', function(name) {
     console.log('Connecting:', name);
@@ -96,11 +102,15 @@ io.on('connection', function(socket) {
       socket.emit('reject name', 'That user is already connected');
       return;
     } else if (phase != 'lobby' && !(name in name_to_pid)) {
-      socket.emit('reject name', 'The hacking has already started');
+      socket.emit('reject name', 'There is no user with that name');
       return;
     }
     socket_to_name[socket.id] = name;
-    if (!(name in name_to_pid)){
+    if (name in name_to_pid) {
+      pid = name_to_pid[name];
+      players[pid].connected = true;
+
+    } else {
       pid = players.length;
       name_to_pid[name] = pid;
       players[pid] = {
@@ -109,10 +119,8 @@ io.on('connection', function(socket) {
         connected: true,
         state: '',
         secrets: newSecrets(),
+        latency: 999
       };
-    } else {
-      pid = name_to_pid[name];
-      players[pid].connected = true;
     }
     socket.emit('accept name', pid);
     broadcastState();
@@ -130,8 +138,8 @@ io.on('connection', function(socket) {
   });
 
 
-  socket.on('start', function(action) {
-    if (action != "now" || phase != "lobby") return;
+  socket.on('start', function() {
+    if (phase != "lobby") return;
     if (players.length < 0  || players.length > 6) {
       console.log('Incorrect number of players:', num_players);
       return;
@@ -142,12 +150,16 @@ io.on('connection', function(socket) {
 
   socket.on(
     'chooseAction',
-    (choice) => receiveActionChoice(pid, choice)
+    function (choice) {
+      if (!(pid in players) || !players[pid].connected) return;
+      receiveActionChoice(pid, choice);
+    }
   );
 
   socket.on(
     'chooseSecrets',
     function (choice) {
+      if (!(pid in players) || !players[pid].connected) return;
       if (phase == 'disconnect') receiveSecretsChoice(pid, choice);
       if (phase == 'emptyBag') receiveEmptyBagChoice(pid, choice);
     }
@@ -155,8 +167,16 @@ io.on('connection', function(socket) {
 
   socket.on(
     'finishHacking',
-    () => receiveFinishHacking(pid)
+    function () {
+      if (!(pid in players) || !players[pid].connected) return;
+      receiveFinishHacking(pid);
+    }
   );
+
+  socket.on('latency', function (ms) {
+    if (!(pid in players)) return;
+    players[pid].latency = ms;
+  });
 
 });
 
@@ -172,7 +192,8 @@ function broadcastState() {
     remainingAgents: bag.length,
     round: {
       number: round_num,
-      title: rounds[round_num].title
+      title: rounds[round_num].title,
+      tagline: rounds[round_num].tagline
     }
   });
 }
@@ -193,9 +214,9 @@ function setStateOfAllOnlinePlayers(state) {
 // ------------------ Init game, round ------------------ //
 
 function nextRound() {
-  round_num += 3;
+  round_num += 1;
 
-  if (round_num > 6) {
+  if (round_num > 6 || players.some(p => p.money >= 18)) {
     round_num = 6; // So as not to break broadcastState
     phase = 'gameOver';
     broadcastState();
@@ -323,7 +344,7 @@ function startDisconnect() {
 }
 
 function receiveSecretsChoice(pid, choice) {
-  if (phase != 'disconnect' || players[pid].state != 'disconnecting') return;
+  if (phase != 'disconnect') return;
   choices[pid] = choice;
   players[pid].secrets = choice;
   broadcastState();
@@ -428,7 +449,7 @@ function receiveFinishHacking(pid) {
   }
 
   broadcastState();
-  setTimeout(finishResults, 3000 + 1000 * numDisconnects);
+  setTimeout(finishResults, 4000 + 1000 * numDisconnects);
 }
 
 function randomSecret(secrets) {
@@ -544,7 +565,7 @@ function moneySteal(stealer, amt) {
   stealer.secrets = newSecrets();
   broadcastState();
 
-  setTimeout(nextRound, 4000);
+  setTimeout(nextRound, 5000);
 }
 
 // ------------------------- Empty Bag ------------------------------//
@@ -595,7 +616,7 @@ function finishEmptyBag() {
   }
   commonText = playersTakeSecretsText(names, secrets_taken);
   broadcastState();
-  setTimeout(finishRound, 3000);
+  setTimeout(finishRound, 5000);
 }
 
 

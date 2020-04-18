@@ -91,11 +91,9 @@ pre {
   left: 50%;
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);  
+  font: 30px Inconsolata, monospace;
 }
 
-#roundTitle {
-  font: 18px Inconsolata, monospace;
-}
 
 #board {
   margin: 15px 0 0 0;
@@ -125,7 +123,7 @@ pre {
   position: absolute;
   top: 0%;
   left: 50%;
-  opacity: 0.5;
+  opacity: 0.4;
   -ms-transform: translate(-50%, 0%);
   transform: translate(-50%, 0%);
   width: 1200px;
@@ -231,7 +229,6 @@ pre {
   padding-bottom: 20px;
   margin-bottom: 20px;
 }
-
 
 #winExfiltrate {
   padding-top: 40px;
