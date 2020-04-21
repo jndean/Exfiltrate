@@ -729,7 +729,7 @@ var hackingLocation = [
 ];
 var hackingComment = [
     'Surely they won\'t fall for that?',
-    'That hasn\'t worked since the 90\'s...',
+    'That hasn\'t worked since the 90s...',
     'Classic.',
     'Their hacking skills are over 9000!',
     'Avert your eyes.',

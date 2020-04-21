@@ -157,6 +157,7 @@ function drawPlayers() {
 	var rows = [[], [], [], []];
 	for (var i = 0; i < state.players.length; i++) {
 		var player = state.players[i];
+
 		if (player.state == 'disconnecting') {
 			if (offBlink) {
 				pipes.push(red('|'));
