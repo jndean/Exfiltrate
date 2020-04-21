@@ -178,10 +178,20 @@ io.on('connection', function(socket) {
     players[pid].latency = ms;
   });
 
+  socket.on('trace', function (data) {
+    if (!(pid in players)) console.log('ServerPID: ', pid, ', (not in server players)');
+    else console.log('ServerPID:', pid, ', Name: ', players[pid].name);
+    console.log('Sent: ', JSON.stringify(data, null, 2), '\n----------------------------');
+  });
+
+  socket.on('debug', function () {
+    io.sockets.emit('debug');
+  });
+
 });
 
-function broadcastState() {
-  io.sockets.emit('state', {
+function packageState() {
+  return {
     players: players,
     phase: phase,
     secrets: secrets,
@@ -195,9 +205,11 @@ function broadcastState() {
       title: rounds[round_num].title,
       tagline: rounds[round_num].tagline
     }
-  });
+  };
 }
-
+function broadcastState() {
+  io.sockets.emit('state', packageState());
+}
 
 function setStateIfOnline(player, state) {
   if (player.state != 'offline') {
@@ -658,7 +670,9 @@ var insultNoun = [
     'no-op',
     'code monkey',
     'core dump',
-    'null pointer'
+    'null pointer',
+    'gigaflop',
+
 ];
 function randomInsult() {
   return rng(insultAdjective) + ' ' + rng(insultNoun);
@@ -688,6 +702,9 @@ var hackingNoun = [
     'a zero-day',
     'a backdoor',
     'a modchip',
+    'illegal hex codes',
+    'impossible binary values',
+    'a virtual machine',
     'a hacked copy of MS paint',
     'a botnet',
     'the konami code',
@@ -706,7 +723,9 @@ var hackingLocation = [
     'behind the firewall',
     'from stackoverflow',
     'from the dark cloud',
-    'into the wifi'
+    'into the wifi',
+    'into /dev/null',
+    'with a genetic algorithm'
 ];
 var hackingComment = [
     'Surely they won\'t fall for that?',
@@ -717,16 +736,29 @@ var hackingComment = [
     'Do they know that doesn\'t make any sense?',
     'It\'s an older move but it checks out.',
     'It must be a unix thing.',
-    'That\'s a good trick.'
+    'That\'s a good trick.',
+    'Did they forget about Y2K?',
 ];
 
+ 
+var tmpVerb = [], tmpNoun = [], tmpLocation = [], tmpComment = [];
 function randomHackingText() {
-  return [rng(hackingVerb),
-          rng(hackingNoun),
-          rng(hackingLocation) + '.',
-          rng(hackingComment),
-         ].join(' ');
+  if (tmpVerb.length == 0)
+    tmpVerb = shuffle(hackingVerb.slice());
+  if (tmpNoun.length == 0)
+    tmpNoun = shuffle(hackingNoun.slice());
+  if (tmpLocation.length == 0)
+    tmpLocation = shuffle(hackingLocation.slice());
+  if (tmpComment.length == 0)
+    tmpComment = shuffle(hackingComment.slice());
+  return [
+    tmpVerb.pop(),
+    tmpNoun.pop(),
+    tmpLocation.pop() + '.',
+    tmpComment.pop(),
+  ].join(' ');
 }
+
 
 function agentJoinText(names) {
   var message;
@@ -763,9 +795,15 @@ function agentRemainText(name) {
   return name + ' remains connected';
 }
 
+var nobodyDisconnectedMsg = [
+    'In for a bit, in for a byte',
+    'This can only go well',
+    'There is still honour amongst thieves'
+];
+
 function playersTakeSecretsText(names, secrets) {
   if (names.length == 0) {
-    return 'Nobody disconnected. In for a bit, in for a byte';
+    return 'Nobody disconnected. ' + rng(nobodyDisconnectedMsg);
   }
 
   var message;

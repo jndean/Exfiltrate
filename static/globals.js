@@ -6,6 +6,7 @@ var typing_delay = 10;
 
 // State! //
 var state = undefined;
+var myPid = null;
 
 var offBlink = false;  // For doing blinking characters etc
 var blinkDelay = 500;
@@ -27,6 +28,21 @@ board.style.visibility = 'hidden';
 socket.on('pong', function(ms) {
     socket.emit('latency', ms);
 });
+
+// respond to request for debug state //
+socket.on('debug', function () {
+	var myName = null;
+	if (state != undefined && myPid in state.players) {
+		myName = state.players[myPid].name;
+	}
+	var debug ={
+		myPidIs: myPid,
+		myNameIs: myName,
+		myStateIs: state
+	}
+	socket.emit('trace', debug);
+});
+
 
 // Utility functions! //
 

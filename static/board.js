@@ -1,6 +1,4 @@
 
-var myPid = null;
-
 
 // Main game entry point is when server accepts the player's name //
 socket.on('accept name', function(pid) {
@@ -30,7 +28,7 @@ function updateState(new_state) {
   	console.log("Current state", state);
   	drawBoard();
 
-  	if (!phaseChange) return;
+  	if (!phaseChange || lobbyOpen) return;
 
   	lastChoice = choiceOutput.innerHTML;
   	choiceOutput.innerHTML = "";

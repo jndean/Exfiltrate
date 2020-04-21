@@ -179,7 +179,7 @@ function drawPlayers() {
 		money = " ".repeat(3 - money.length) + money;
     if (player.money >= 18) {
       money = '<font color=\"gold\">' + money + '</font>';
-    } else if (state.phase == 'roundEnd' && offBlink) {
+    } else if (['roundEnd', 'moneySteal'].includes(state.phase) && offBlink) {
       money = '<font color=\"#44ff44\">' + money + '</font>';
     }
 		rows[1].push("| " + name + money + " |");

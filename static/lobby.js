@@ -1,3 +1,4 @@
+var lobbyOpen = true;
 
 var splash = document.getElementById("splash");
 var linesBox = document.getElementById("joinlines");
@@ -38,5 +39,6 @@ function validNameCheck(name) {
 function closeLobby() {
 	socket.removeAllListeners('reject name');
 	lobby.style.display = 'none';
+	lobbyOpen = false;
 }
 

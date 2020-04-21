@@ -41,10 +41,6 @@ function agentRemains(name) {
 	return name + ' remains connected';
 }
 
-function noDisconnects() {
-	return "Nobody disconnected. In for a bit, in for a byte.";
-}
-
 function hackerPrompt() {
 	var message = 'Hack the enemy agents and steal their secrets<br>> Hint: ';
 	message += state.commonText.split('.')[0];
