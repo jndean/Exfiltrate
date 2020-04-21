@@ -18,5 +18,10 @@ There are network topologies
 
 There is hacking
 
-![](/screenshots/hacking.png)
+<p align="center">
+  <img src="/screenshots/hacking.gif">
+</p>
 
+
+
+I am not a web designer, but desperate times...
