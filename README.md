@@ -12,11 +12,11 @@ There is ascii art
 
 There are network topologies
 
-![](screenshots\topology.png)
+![](/screenshots/topology.png)
 
 
 
 There is hacking
 
-![](screenshots\hacking.png)
+![](/screenshots/hacking.png)
 
