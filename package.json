@@ -18,6 +18,6 @@
   "homepage": "https://github.com/omgimanerd/how-to-make-a-multiplayer-game#readme",
   "dependencies": {
     "express": "^4.14.0",
-    "socket.io": "^1.7.2"
+    "socket.io": "^2.4.0"
   }
 }
