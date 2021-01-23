@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <title>Exfiltrate</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+  </head>
+  <body>
+
+    <input autocomplete="off" id="inputField" type="text" autofocus>
+    <span class="scanlines"></span>
+    <span class="scanline"></span>
+    
+    <div class="lobby" id="lobby">
+      <center><pre id="splash"></pre></center>
+      <pre><br><span id="joinlines"></span><span id="nameInput"></span></pre>
+    </div>
+
+    <div id="roundSplash">
+      <center>
+        <span id="roundSplashRound"></span><span id="roundSplashTitle"></span>
+      </center>
+    </div>
+
+    <div id="board">
+      <center>
+        <span id="roundTitle">LOBBY</span><br>
+        <pre><span id="topology"></span></pre>
+        <br>
+        <div id="cmdline">
+          <div id="cmdPromptBox">
+            <span>> </span><span id="prompt"></span>
+            <span id="choiceOutput"></span>
+            <span id="choiceInput"></span>
+          </div>
+          <div id="hackingPromptBox">
+            <center>
+              <div id="hackingPrompt"></div>            
+              <div id="hackingProgressBar"></div>
+            </center>
+          </div>
+          <center>════════════════════════════════════════[LOG]════════════════════════════════════════<br></center>
+          <span id="log"></span>
+        </div>
+      </center>
+    </div>
+
+    <div id="hacking"><div id="skewBox"><div id="flickerBox">
+      <pre id="hackingLeft"></pre>
+      <div id="hackingDivide"></div>
+      <pre id="hackingRight"></pre>
+    </div></div></div>
+
+    <div id="winScreen">
+      <center>
+        <div id="winTitle"></div><br>
+        <pre id="winGraph"></pre>
+        <div id="winExfiltrate"></div>
+      </center>
+    </div>
+
+
+    <script src="/static/words.js"></script>
+    <script src="/static/globals.js"></script>
+    <script src="/static/spectator_lobby.js"></script>
+    <script src="/static/hacking.js"></script>
+    <script src="/static/drawing.js"></script>
+    <script src="/static/board.js"></script>
+  </body>
+</html>
+

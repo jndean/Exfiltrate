@@ -16,8 +16,8 @@ app.use('/static', express.static(__dirname + '/static'));
 app.get('/', function(request, response) {
   response.sendFile(path.join(__dirname, 'index.html'));
 });
-app.get('/design', function(request, response) {
-  response.sendFile(path.join(__dirname, 'design.html'));
+app.get('/spectate', function(request, response) {
+  response.sendFile(path.join(__dirname, 'spectator.html'));
 });
 server.listen(port, function() {
   console.log('Starting server on port', port);
@@ -95,6 +95,14 @@ var commonText = '';
 io.on('connection', function(socket) {
 
   var pid = null;
+
+  socket.on('spectate', function() {
+    console.log('Spectator joined');
+    socket.emit('accept name', -1);
+    broadcastState();
+    socket.emit('open board');
+  });
+
 
   socket.on('join game', function(name) {
     console.log('Connecting:', name);
@@ -207,6 +215,7 @@ function packageState() {
     }
   };
 }
+
 function broadcastState() {
   io.sockets.emit('state', packageState());
 }
@@ -501,10 +510,10 @@ function finishResults() {
 // -------------------------------------------------- //
 
 function finishTurn() {
-  if (agents.length == 0 && bag.length == 0) {
-    setTimeout(startEmptyBag, 2000);
-  } else if (firewallsDown >= 3) {
+  if (firewallsDown >= 3) {
     setTimeout(finishRound, 2000);
+  } else if (agents.length == 0 && bag.length == 0) {
+    setTimeout(startEmptyBag, 2000);
   } else {
     setTimeout(startConnectingAgents, 2000);
   }
@@ -656,7 +665,7 @@ function rng(items) {
 
 var insultAdjective = [
     'two-bit',
-    'depricated',
+    'deprecated',
     'packet-dropping',
     'hackless',
     'gui-using',

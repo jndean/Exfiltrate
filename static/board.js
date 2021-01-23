@@ -275,9 +275,6 @@ function startPhase_emptyBag() {
 
 
 
-// ----------------------------------------------- //
-
-
 var winScreen = document.getElementById('winScreen');
 var winGraph = document.getElementById('winGraph');
 var winTitle = document.getElementById('winTitle');

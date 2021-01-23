@@ -65,9 +65,63 @@ function animate_typing(dest, text, delay, finish, no_pause=false) {
 		written_text += c;
 		dest.innerHTML = written_text;
 		if (text.length != 0) dest.innerHTML += '█';
+		blipSound.play();
 	}, delay);
 }
 
+
+
+function rng(items) {
+	return items[Math.floor(Math.random() * items.length)];
+}
+
+// ----------- Sounds ------------- //
+
+function sound(src, vol=1) {
+  this.sound = document.createElement("audio");
+  this.sound.src = src;
+  this.sound.setAttribute("preload", "auto");
+  this.sound.setAttribute("controls", "none");
+  this.sound.style.display = "none";
+  this.sound.volume = vol;
+  document.body.appendChild(this.sound);
+  this.play = () => this.sound.play();
+  this.stop = () => this.sound.pause();
+  this.volume = (v) => this.sound.volume = v;
+}
+
+var keyboardSounds = [
+	new sound("static/sounds/kb1.mp3"),
+	new sound("static/sounds/kb2.mp3"),
+	new sound("static/sounds/kb3.mp3"),
+	new sound("static/sounds/kb4.mp3"),
+	new sound("static/sounds/kb5.mp3"),
+	new sound("static/sounds/kb6.mp3")
+]
+var keyboardSoundsReturn = new sound("static/sounds/kbenter.mp3", 0.45);
+var blipSound = new sound("static/sounds/blip.mp3", 0.05);
+/*
+var counterSound = new sound("static/sounds/powerdown_short.mp3", 0.4);
+var compromiseSound = new sound("static/sounds/wrong.mp3", 0.5);
+var connectingSounds = [
+	new sound("static/sounds/connecting_short.mp3", 0.5),
+	new sound("static/sounds/connecting_short2.mp3", 0.5)
+]
+var dialSound = new sound("static/sounds/dial.mp3", 0.5);
+*/
+
+function playKeyboardSound(keycode) {
+	// return;	
+	if (keycode == 13) {
+		keyboardSoundsReturn.play();
+	} else {
+		if (state == undefined || state.phase != 'hacking') {
+			sound = rng(keyboardSounds);
+			sound.volume(0.1 + Math.random() * 0.3);
+			sound.play();
+		}
+	}
+}
 
 // ----------------- Global input capture ---------------- //
 var inputField = document.getElementById('inputField');
@@ -102,6 +156,7 @@ function placeInputBox(location, validInput, action) {
 
 	// Callback on enter //
 	document.body.onkeydown = function(e){
+		playKeyboardSound(e.keyCode);
 		inputField.focus();
 		inputField.value = filterAlphabet(inputField.value);
 		if (e.keyCode == 13 && validInput(inputField.value)) {
@@ -144,10 +199,6 @@ function filterAlphabet(str) {
             .filter(x => alphabet.includes(x))
             .join('')
             .slice(0, maxInputLength);
-}
-
-function rng(items) {
-	return items[Math.floor(Math.random() * items.length)];
 }
 
 function padText(text, width, padding = ' ') {

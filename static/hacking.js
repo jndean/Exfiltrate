@@ -59,6 +59,7 @@ function hideHacking() {
 }
 
 function hackingKeyDown(e) {
+	playKeyboardSound(e.keyCode);
 	if (!highentropy(e.keyCode)) return;
 	if (hackingProgress >= 1 && e.keyCode == 13) {
 		socket.emit('finishHacking');

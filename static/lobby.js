@@ -4,7 +4,10 @@ var splash = document.getElementById("splash");
 var linesBox = document.getElementById("joinlines");
 var nameInput = document.getElementById("nameInput");
 
+
+
 document.body.onkeydown = function () {
+	keyboardSoundsReturn.play();
 	splash.parentNode.removeChild(splash);
 	document.body.onkeydown = null;
 	animate_typing(
