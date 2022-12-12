@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/omgimanerd/how-to-make-a-multiplayer-game#readme",
   "dependencies": {
-    "express": "^4.14.0",
+    "express": "^4.17.3",
     "socket.io": "^1.7.2"
   }
 }
